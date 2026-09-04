@@ -1,0 +1,95 @@
+@import 'tailwindcss';
+
+/*
+ * LifeOS design tokens. Dark-mode-first per docs/ARCHITECTURE.md — a light theme is deferred to
+ * Stage 2 UI polish (see docs/ROADMAP.md), so these are the only values defined for now.
+ * Defining them under @theme makes Tailwind generate matching utilities automatically, e.g.
+ * bg-base, text-water, border-streak.
+ */
+@theme {
+  --color-base: #0b0b14;
+  --color-surface: #14141f;
+  --color-surface-raised: #1c1c2b;
+  --color-text-primary: #f4f4f8;
+  --color-text-secondary: #a3a3b8;
+  --color-text-muted: #6b6b80;
+
+  --color-water: #6fb8d1;
+  --color-streak: #6bbf73;
+  --color-action: #ff6f61;
+  --color-mind: #c9b6de;
+  --color-finance: #d8c4a7;
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-base);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer utilities {
+  /*
+   * Glass surface. Layered translucent gradient + backdrop blur, per docs/ARCHITECTURE.md
+   * ("Glass design system"). Applied strategically to nav/cards/modals, never large flat
+   * backgrounds. Ships an opaque fallback for browsers without backdrop-filter support and for
+   * prefers-reduced-transparency, per the accessibility requirement in the original spec.
+   */
+  .glass {
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--color-surface-raised) 90%, white 6%) 0%,
+      color-mix(in srgb, var(--color-surface) 92%, black 4%) 100%
+    );
+    border: 1px solid color-mix(in srgb, white 12%, transparent);
+    box-shadow: 0 8px 32px color-mix(in srgb, black 35%, transparent);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: blur(12px) saturate(180%);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background: var(--color-surface-raised);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      background: var(--color-surface-raised);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
