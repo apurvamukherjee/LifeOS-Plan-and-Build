@@ -1,4 +1,4 @@
-# LifeOS Data Model (Stage 1 MVP)
+# LifeOS Data Model (Stage 1 + Stage 2)
 
 Every table shares these fields (defined once as `BaseRecord` in `src/db/schema.ts`):
 
@@ -24,13 +24,47 @@ Every table shares these fields (defined once as `BaseRecord` in `src/db/schema.
   recurrenceRule: RecurrenceRule | null (JSON), completedAt: string | null`
 - **`reminders`** — `entityType: 'task'|'supplement'|'water', entityId: string, scheduledAt: string,
   repeatRule: unknown | null (JSON), channel: 'in-app'|'push', status: 'scheduled'|'fired'|'dismissed'|'snoozed'`
-- **`streaks`** — `moduleKey: 'water'|'supplements'|'tasks', currentStreak: number,
+- **`streaks`** — `moduleKey: ModuleKey, currentStreak: number,
   longestStreak: number, lastCompletedLocalDate: string | null (YYYY-MM-DD),
   freezesAvailable: number, freezesUsedDates: string[], lastEvaluatedLocalDate: string | null`
-  — one row per module, enforced by repository `getOrCreate(moduleKey)`.
+  — one row per module, enforced by repository `getOrCreate(moduleKey)`. `ModuleKey` is
+  `'water'|'supplements'|'tasks'|'expenses'|'food'|'gym'|'medication'` — Notes and Wishlist
+  deliberately have no streak (see their `docs/modules/*.md`).
 - **`pushSubscriptions`** — `endpoint: string, keys: {p256dh: string; auth: string}, userAgent: string`
 - **`syncMeta`** — **local-only, never synced.** PK is `tableName`; value is `cursor: string`
   (max `server_updated_at` seen for that table).
+
+### Stage 2 tables
+
+- **`wishlistItems`** — `name, price: number, quantity: number, category: string, store: string,
+  wantNeedLevel: number (1-5), sortOrder: number, status: 'active'|'archived'|'purchased'`
+- **`notes`** — `title: string | null, body: string, tags: string[], color: string | null,
+  isPinned: boolean`
+- **`expenses`** — `amount: number, direction: 'in'|'out', category: string, note: string,
+  occurredAt: string`
+- **`budgets`** — `category: string, monthlyLimit: number`
+- **`recurringBills`** — `label: string, amount: number, dayOfMonth: number, category: string`
+  (currently CRUD-only in the repo layer; no auto-generation UI yet)
+- **`foods`** — `name, caloriesPerServing: number, proteinG: number, carbsG: number, fatG: number,
+  servingUnit: string, isSavedMeal: boolean`
+- **`foodLogs`** — `foodId: string | null (FK), freeTextName: string | null, servings: number,
+  mealSlot: 'breakfast'|'lunch'|'dinner'|'snack', loggedAt: string`
+- **`exercises`** — `name, muscleGroup: string, equipment: string`
+- **`workouts`** — `name, notes: string, startedAt: string, completedAt: string | null`
+- **`workoutSets`** — `workoutId: string (FK), exerciseId: string (FK), setIndex: number,
+  reps: number, weightKg: number, rpe: number | null`
+- **`workoutTemplates`** — `name, exerciseOrder: string[]` (CRUD-only in the repo layer; no
+  "start from template" UI flow yet — starting a workout always begins blank)
+- **`medications`** — same shape as `supplements` (`name, dosage: string, shape: string,
+  color: string, instructions: string, scheduleRule: ScheduleRule (JSON), currentStock: number,
+  lowStockThreshold: number`) — reuses the Supplements `ScheduleRule` type verbatim
+- **`medicationLogs`** — `medicationId: string (FK), scheduledAt: string, takenAt: string | null,
+  status: 'taken'|'missed'|'skipped'`
+
+`isScheduledOn` (schedule-day matching) and `isLowStock` moved out of the Supplements module into
+`src/engine/scheduling/scheduleRule.ts` and `src/engine/inventory/stock.ts` respectively during
+Stage 2, since Medication needed the identical logic — Supplements' `cycleLogic.ts` now just
+re-exports them for its existing importers.
 
 ## Supabase (`supabase/schema.sql`)
 

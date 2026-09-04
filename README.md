@@ -1,9 +1,9 @@
 # LifeOS
 
-An offline-first, glassmorphic lifestyle-tracker PWA. This is the Stage 1 MVP: a shared
-logging/streak/reminder engine plus three modules — **Water**, **Supplements**, **Tasks**.
-Six more modules (Medication, Food, Gym, Expenses, Wishlist, Notes) are documented but not yet
-built — see [`docs/ROADMAP.md`](docs/ROADMAP.md).
+An offline-first, glassmorphic lifestyle-tracker PWA. All 9 modules from the original spec are
+built: **Water, Supplements, Tasks, Medication, Food, Gym, Expenses, Wishlist, Notes** — sharing
+one logging/streak/reminder engine. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for what's next
+(Stage 3: insights, gamification polish, an optional Capacitor native wrapper).
 
 ## Getting started
 
@@ -13,7 +13,8 @@ npm run dev
 ```
 
 Open the printed local URL. No account or configuration is required — everything runs fully
-offline against local IndexedDB storage.
+offline against local IndexedDB storage. The bottom nav covers the 4 daily-habit trackers (Home,
+Water, Supplements, Tasks); the other 5 modules are reachable from the cards on Home.
 
 ## Scripts
 
@@ -37,14 +38,14 @@ pure local-only mode and a sign-in screen never even appears.
 
 ## Known limitation: reminders
 
-Reminders are **in-app only** in this MVP — they fire via the Notification API while the tab is
-open and foregrounded. Web Push (for reminders while the app/tab is closed) is scaffolded on the
-client (`src/engine/reminders/pushSubscription.ts`, `public/push-handler.js`) but not wired to a
+Reminders are **in-app only** — they fire via the Notification API while the tab is open and
+foregrounded. Web Push (for reminders while the app/tab is closed) is scaffolded on the client
+(`src/engine/reminders/pushSubscription.ts`, `public/push-handler.js`) but not wired to a
 server, since no backend exists yet to send push payloads. This is a deliberate, honest scoping
-decision — see `docs/ARCHITECTURE.md` ("Reminder service") — and matters most if a future
-Medication module is built: don't treat this as reliable enough for anything safety-relevant
-without either a server-side Web Push sender or a Capacitor native wrapper (see
-`docs/ROADMAP.md`, Stage 3).
+decision — see `docs/ARCHITECTURE.md` ("Reminder service"). It matters most for the Medication
+module (its page carries an in-app disclaimer about this): don't treat in-app-only reminders as
+reliable enough for anything safety-relevant without either a server-side Web Push sender or a
+Capacitor native wrapper (see `docs/ROADMAP.md`, Stage 3).
 
 ## Documentation
 
@@ -54,5 +55,6 @@ without either a server-side Web Push sender or a Capacitor native wrapper (see
 - [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) / [`docs/SYNC_DESIGN.md`](docs/SYNC_DESIGN.md) —
   schema and sync algorithm detail
 - [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md) — dated log of what's actually been built
-- [`docs/modules/`](docs/modules) — condensed specs for the deferred Stage 2 modules
+- [`docs/modules/`](docs/modules) — the original per-module specs (all now built; kept as
+  design-rationale reference)
 - [`docs/ORIGINAL_SPEC.md`](docs/ORIGINAL_SPEC.md) — the full original product research

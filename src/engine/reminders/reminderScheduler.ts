@@ -39,6 +39,14 @@ function reminderBody(reminder: Reminder): string {
       return 'A supplement dose is due.'
     case 'task':
       return 'A task is due.'
+    case 'medication':
+      return 'A medication dose is due.'
+    case 'gym':
+      return 'It might be time for a workout.'
+    case 'food':
+      return "Don't forget to log a meal."
+    case 'note':
+      return 'A note reminder is due.'
   }
 }
 

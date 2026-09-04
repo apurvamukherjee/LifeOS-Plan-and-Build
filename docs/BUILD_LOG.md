@@ -128,3 +128,71 @@ Append-only, dated. One entry per build phase (see `docs/ROADMAP.md` for the pha
   once more modules (and more bundle weight) are added.
 - Light theme, Lottie celebrations, and home-screen widgets from the original design spec are
   intentionally not part of this MVP pass — see `docs/ROADMAP.md` Stage 2/3.
+
+## 2026-09-05 — Stage 2: Wishlist, Notes, Expenses, Food, Medication, Gym (all 6 remaining modules)
+
+- **Schema**: extended `ModuleKey` to `'water'|'supplements'|'tasks'|'expenses'|'food'|'gym'|'medication'`
+  (Notes/Wishlist excluded — no streak, per their own `docs/modules/*.md`). Added 12 new Dexie
+  tables via a proper `db.version(2).stores({...})` bump (full schema restated per Dexie's
+  versioning model, not just the delta) and the matching 12 tables + RLS + triggers appended to
+  `supabase/schema.sql` (generated via a one-off script to keep the repetitive trigger/policy
+  boilerplate consistent across all of them, then reviewed before appending).
+- **Refactor**: pulled `isScheduledOn` and `isLowStock` out of `modules/supplements/cycleLogic.ts`
+  into shared `engine/scheduling/scheduleRule.ts` and `engine/inventory/stock.ts`, since
+  Medication needed identical logic — `cycleLogic.ts` re-exports both so existing Supplements
+  imports didn't need to change.
+- **Wishlist**: `totals.ts` (running total, per-category subtotals — pure, unit-tested), repo,
+  add/list UI with want/need level and an archive/purchased flow instead of hard delete. No
+  streak/reminder engine involvement, per its own spec.
+- **Notes**: debounced (500ms) auto-save quick-capture textarea that creates-then-updates a
+  single draft note as you type (no explicit save button, per docs/modules/notes.md), tags/color/
+  pin editable after the fact. No streak, per its own spec.
+- **Expenses**: `summary.ts` (net total, spend-by-category, local-month filtering, budget
+  remaining — pure, unit-tested, including a DST/timezone-boundary case) — "Money In / Money Out"
+  two-button entry per the Pocket Clear pattern in the original research; streak = "logged a
+  transaction today."
+- **Food**: tiered input per docs/modules/food.md — quick-add (name + calories, macros behind a
+  "more detail" disclosure) always creates a `Food` row so daily totals can join on it; a
+  "save as meal" checkbox makes it reappear in a one-tap saved-meals quick-log row. Barcode scan
+  and AI photo/voice logging deliberately NOT built (explicitly out of scope in the spec — highest
+  implementation cost, requires external APIs). `nutrition.ts` (macro totals via foodId join,
+  pure, unit-tested).
+- **Medication**: near-identical structure to Supplements (reusing the shared scheduling/stock
+  helpers) but defaults `goalMode` to `'all-scheduled'` rather than Supplements' `'any'`, since
+  adherence-to-every-dose is the headline metric here. `adherence.ts` returns 100% with no
+  history (shame-free — a brand-new medication doesn't render as an immediate failure) rather
+  than 0%. The page carries an explicit in-app disclaimer that reminders are in-app-only, per the
+  reminder-reliability caveat in docs/modules/medication.md.
+- **Gym** (the most complex module): `plateCalculator.ts` and `personalRecords.ts` (both pure,
+  unit-tested — greedy plate breakdown; PR detection; "most recent set for this exercise,
+  excluding the current workout" for the progressive-overload inline comparison). An active
+  workout session tracks sets via live Dexie queries rather than local component state; the rest
+  timer is a self-contained local countdown (per the spec, deliberately NOT routed through the
+  shared reminders table — it only needs to fire while the screen is open). `finishWorkout` is
+  the only action wrapped in `logEvent` — individual set logs don't touch the streak engine,
+  only completing the workout does, which is what "goal met today" means for this module.
+  Workout templates got a data layer (CRUD repo functions) but no "start from template" UI flow
+  yet — starting a workout always begins blank; noted as a gap in `docs/DATA_MODEL.md`.
+- **Integration**: `router.tsx` gained 6 routes; `pages/Home.tsx` became a 2-column bento grid
+  (Water full-width up top, everything else in a 2-column grid) instead of Stage 1's single
+  column, since 9 module cards no longer fit comfortably as one vertical stack. The bottom nav
+  deliberately stayed at 4 tabs (Home, Water, Supplements, Tasks) rather than growing to 9 — the
+  other 6 modules are reachable only via Home's grid, to avoid nav-bar overcrowding (a design
+  principle carried over from the original spec's "fight complexity" lesson).
+  `useAppForegroundEffects`'s streak-settling loop now covers all 7 streak-bearing modules.
+- **Final verification**: `npx tsc -b` clean, `npx vitest run` — 11 files, 71/71 tests passing,
+  `npm run build` succeeds (bundle now ~550KB, still just a warning). Full browser pass
+  (Playwright): added/logged something in every one of the 6 new modules — including a complete
+  Gym workout (start → add exercise → log a PR-triggering set → finish, verified the PR
+  celebration text appeared and the workout showed up in history with the correct set count) —
+  and confirmed the new Home bento grid reflects every module's live state correctly. Zero
+  console errors across the entire pass.
+
+### Known deferred items (not blocking, noted for later)
+
+- Production bundle grew to ~550KB — the code-splitting item from Stage 1's build log is now
+  more worth doing, still not urgent.
+- No "start workout from template" UI flow (data layer exists, UI doesn't yet).
+- `recurringBills` has no auto-generation UI (CRUD-only in the repo layer).
+- Lottie celebrations and home-screen widgets from the original spec remain unbuilt — see
+  `docs/ROADMAP.md` Stage 3.

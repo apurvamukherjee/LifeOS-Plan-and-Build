@@ -3,7 +3,9 @@ import type { ModuleKey } from '@/db/schema'
 import { startReminderScheduler } from '@/engine/reminders/reminderScheduler'
 import { useEffect } from 'react'
 
-const MODULE_KEYS: ModuleKey[] = ['water', 'supplements', 'tasks']
+// Every ModuleKey that participates in the streak engine. Notes and Wishlist deliberately have
+// no streak (see docs/modules/notes.md and docs/modules/wishlist.md).
+const MODULE_KEYS: ModuleKey[] = ['water', 'supplements', 'tasks', 'medication', 'gym', 'food', 'expenses']
 
 /**
  * Runs on every app mount and whenever the tab becomes visible again: reconciles each module's

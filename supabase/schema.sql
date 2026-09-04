@@ -241,3 +241,371 @@ create policy "select own" on push_subscriptions for select using (user_id = aut
 create policy "insert own" on push_subscriptions for insert with check (user_id = auth.uid());
 create policy "update own" on push_subscriptions for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "delete own" on push_subscriptions for delete using (user_id = auth.uid());
+
+-- ============================================================================
+-- Stage 2: Wishlist, Notes, Expenses, Food, Gym, Medication
+-- ============================================================================
+
+-- wishlist_items --------------------------------------------------------------
+create table if not exists wishlist_items (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  name text not null,
+  price numeric not null,
+  quantity numeric not null,
+  category text not null,
+  store text not null,
+  want_need_level integer not null,
+  sort_order integer not null,
+  status text not null,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_wishlist_items_server_updated_at on wishlist_items;
+create trigger trg_wishlist_items_server_updated_at
+  before insert or update on wishlist_items
+  for each row execute function set_server_updated_at();
+alter table wishlist_items enable row level security;
+drop policy if exists "select own" on wishlist_items;
+drop policy if exists "insert own" on wishlist_items;
+drop policy if exists "update own" on wishlist_items;
+drop policy if exists "delete own" on wishlist_items;
+create policy "select own" on wishlist_items for select using (user_id = auth.uid());
+create policy "insert own" on wishlist_items for insert with check (user_id = auth.uid());
+create policy "update own" on wishlist_items for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on wishlist_items for delete using (user_id = auth.uid());
+
+-- notes -----------------------------------------------------------------------
+create table if not exists notes (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  title text,
+  body text not null,
+  tags jsonb not null default '[]'::jsonb,
+  color text,
+  is_pinned boolean not null default false,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_notes_server_updated_at on notes;
+create trigger trg_notes_server_updated_at
+  before insert or update on notes
+  for each row execute function set_server_updated_at();
+alter table notes enable row level security;
+drop policy if exists "select own" on notes;
+drop policy if exists "insert own" on notes;
+drop policy if exists "update own" on notes;
+drop policy if exists "delete own" on notes;
+create policy "select own" on notes for select using (user_id = auth.uid());
+create policy "insert own" on notes for insert with check (user_id = auth.uid());
+create policy "update own" on notes for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on notes for delete using (user_id = auth.uid());
+
+-- expenses --------------------------------------------------------------------
+create table if not exists expenses (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  amount numeric not null,
+  direction text not null,
+  category text not null,
+  note text not null default '',
+  occurred_at timestamptz not null,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_expenses_server_updated_at on expenses;
+create trigger trg_expenses_server_updated_at
+  before insert or update on expenses
+  for each row execute function set_server_updated_at();
+alter table expenses enable row level security;
+drop policy if exists "select own" on expenses;
+drop policy if exists "insert own" on expenses;
+drop policy if exists "update own" on expenses;
+drop policy if exists "delete own" on expenses;
+create policy "select own" on expenses for select using (user_id = auth.uid());
+create policy "insert own" on expenses for insert with check (user_id = auth.uid());
+create policy "update own" on expenses for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on expenses for delete using (user_id = auth.uid());
+
+-- budgets ---------------------------------------------------------------------
+create table if not exists budgets (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  category text not null,
+  monthly_limit numeric not null,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now(),
+  unique (user_id, category)
+);
+drop trigger if exists trg_budgets_server_updated_at on budgets;
+create trigger trg_budgets_server_updated_at
+  before insert or update on budgets
+  for each row execute function set_server_updated_at();
+alter table budgets enable row level security;
+drop policy if exists "select own" on budgets;
+drop policy if exists "insert own" on budgets;
+drop policy if exists "update own" on budgets;
+drop policy if exists "delete own" on budgets;
+create policy "select own" on budgets for select using (user_id = auth.uid());
+create policy "insert own" on budgets for insert with check (user_id = auth.uid());
+create policy "update own" on budgets for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on budgets for delete using (user_id = auth.uid());
+
+-- recurring_bills -------------------------------------------------------------
+create table if not exists recurring_bills (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  label text not null,
+  amount numeric not null,
+  day_of_month integer not null,
+  category text not null,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_recurring_bills_server_updated_at on recurring_bills;
+create trigger trg_recurring_bills_server_updated_at
+  before insert or update on recurring_bills
+  for each row execute function set_server_updated_at();
+alter table recurring_bills enable row level security;
+drop policy if exists "select own" on recurring_bills;
+drop policy if exists "insert own" on recurring_bills;
+drop policy if exists "update own" on recurring_bills;
+drop policy if exists "delete own" on recurring_bills;
+create policy "select own" on recurring_bills for select using (user_id = auth.uid());
+create policy "insert own" on recurring_bills for insert with check (user_id = auth.uid());
+create policy "update own" on recurring_bills for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on recurring_bills for delete using (user_id = auth.uid());
+
+-- foods -----------------------------------------------------------------------
+create table if not exists foods (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  name text not null,
+  calories_per_serving numeric not null,
+  protein_g numeric not null,
+  carbs_g numeric not null,
+  fat_g numeric not null,
+  serving_unit text not null,
+  is_saved_meal boolean not null default false,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_foods_server_updated_at on foods;
+create trigger trg_foods_server_updated_at
+  before insert or update on foods
+  for each row execute function set_server_updated_at();
+alter table foods enable row level security;
+drop policy if exists "select own" on foods;
+drop policy if exists "insert own" on foods;
+drop policy if exists "update own" on foods;
+drop policy if exists "delete own" on foods;
+create policy "select own" on foods for select using (user_id = auth.uid());
+create policy "insert own" on foods for insert with check (user_id = auth.uid());
+create policy "update own" on foods for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on foods for delete using (user_id = auth.uid());
+
+-- food_logs -------------------------------------------------------------------
+create table if not exists food_logs (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  food_id uuid,
+  free_text_name text,
+  servings numeric not null,
+  meal_slot text not null,
+  logged_at timestamptz not null,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_food_logs_server_updated_at on food_logs;
+create trigger trg_food_logs_server_updated_at
+  before insert or update on food_logs
+  for each row execute function set_server_updated_at();
+alter table food_logs enable row level security;
+drop policy if exists "select own" on food_logs;
+drop policy if exists "insert own" on food_logs;
+drop policy if exists "update own" on food_logs;
+drop policy if exists "delete own" on food_logs;
+create policy "select own" on food_logs for select using (user_id = auth.uid());
+create policy "insert own" on food_logs for insert with check (user_id = auth.uid());
+create policy "update own" on food_logs for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on food_logs for delete using (user_id = auth.uid());
+
+-- exercises -------------------------------------------------------------------
+create table if not exists exercises (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  name text not null,
+  muscle_group text not null,
+  equipment text not null,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_exercises_server_updated_at on exercises;
+create trigger trg_exercises_server_updated_at
+  before insert or update on exercises
+  for each row execute function set_server_updated_at();
+alter table exercises enable row level security;
+drop policy if exists "select own" on exercises;
+drop policy if exists "insert own" on exercises;
+drop policy if exists "update own" on exercises;
+drop policy if exists "delete own" on exercises;
+create policy "select own" on exercises for select using (user_id = auth.uid());
+create policy "insert own" on exercises for insert with check (user_id = auth.uid());
+create policy "update own" on exercises for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on exercises for delete using (user_id = auth.uid());
+
+-- workouts --------------------------------------------------------------------
+create table if not exists workouts (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  name text not null,
+  notes text not null default '',
+  started_at timestamptz not null,
+  completed_at timestamptz,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_workouts_server_updated_at on workouts;
+create trigger trg_workouts_server_updated_at
+  before insert or update on workouts
+  for each row execute function set_server_updated_at();
+alter table workouts enable row level security;
+drop policy if exists "select own" on workouts;
+drop policy if exists "insert own" on workouts;
+drop policy if exists "update own" on workouts;
+drop policy if exists "delete own" on workouts;
+create policy "select own" on workouts for select using (user_id = auth.uid());
+create policy "insert own" on workouts for insert with check (user_id = auth.uid());
+create policy "update own" on workouts for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on workouts for delete using (user_id = auth.uid());
+
+-- workout_sets ----------------------------------------------------------------
+create table if not exists workout_sets (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  workout_id uuid not null,
+  exercise_id uuid not null,
+  set_index integer not null,
+  reps integer not null,
+  weight_kg numeric not null,
+  rpe numeric,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_workout_sets_server_updated_at on workout_sets;
+create trigger trg_workout_sets_server_updated_at
+  before insert or update on workout_sets
+  for each row execute function set_server_updated_at();
+alter table workout_sets enable row level security;
+drop policy if exists "select own" on workout_sets;
+drop policy if exists "insert own" on workout_sets;
+drop policy if exists "update own" on workout_sets;
+drop policy if exists "delete own" on workout_sets;
+create policy "select own" on workout_sets for select using (user_id = auth.uid());
+create policy "insert own" on workout_sets for insert with check (user_id = auth.uid());
+create policy "update own" on workout_sets for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on workout_sets for delete using (user_id = auth.uid());
+
+-- workout_templates -----------------------------------------------------------
+create table if not exists workout_templates (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  name text not null,
+  exercise_order jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_workout_templates_server_updated_at on workout_templates;
+create trigger trg_workout_templates_server_updated_at
+  before insert or update on workout_templates
+  for each row execute function set_server_updated_at();
+alter table workout_templates enable row level security;
+drop policy if exists "select own" on workout_templates;
+drop policy if exists "insert own" on workout_templates;
+drop policy if exists "update own" on workout_templates;
+drop policy if exists "delete own" on workout_templates;
+create policy "select own" on workout_templates for select using (user_id = auth.uid());
+create policy "insert own" on workout_templates for insert with check (user_id = auth.uid());
+create policy "update own" on workout_templates for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on workout_templates for delete using (user_id = auth.uid());
+
+-- medications -----------------------------------------------------------------
+create table if not exists medications (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  name text not null,
+  dosage text not null,
+  shape text not null,
+  color text not null,
+  instructions text not null default '',
+  schedule_rule jsonb not null,
+  current_stock numeric not null,
+  low_stock_threshold numeric not null,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_medications_server_updated_at on medications;
+create trigger trg_medications_server_updated_at
+  before insert or update on medications
+  for each row execute function set_server_updated_at();
+alter table medications enable row level security;
+drop policy if exists "select own" on medications;
+drop policy if exists "insert own" on medications;
+drop policy if exists "update own" on medications;
+drop policy if exists "delete own" on medications;
+create policy "select own" on medications for select using (user_id = auth.uid());
+create policy "insert own" on medications for insert with check (user_id = auth.uid());
+create policy "update own" on medications for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on medications for delete using (user_id = auth.uid());
+
+-- medication_logs -------------------------------------------------------------
+create table if not exists medication_logs (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  medication_id uuid not null,
+  scheduled_at timestamptz not null,
+  taken_at timestamptz,
+  status text not null,
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_medication_logs_server_updated_at on medication_logs;
+create trigger trg_medication_logs_server_updated_at
+  before insert or update on medication_logs
+  for each row execute function set_server_updated_at();
+alter table medication_logs enable row level security;
+drop policy if exists "select own" on medication_logs;
+drop policy if exists "insert own" on medication_logs;
+drop policy if exists "update own" on medication_logs;
+drop policy if exists "delete own" on medication_logs;
+create policy "select own" on medication_logs for select using (user_id = auth.uid());
+create policy "insert own" on medication_logs for insert with check (user_id = auth.uid());
+create policy "update own" on medication_logs for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "delete own" on medication_logs for delete using (user_id = auth.uid());
+

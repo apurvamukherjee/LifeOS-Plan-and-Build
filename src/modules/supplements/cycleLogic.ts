@@ -1,19 +1,11 @@
-import { diffLocalDays, getDayOfWeek } from '@/engine/streak/dateUtils'
-import type { CycleConfig, CyclingPattern, ScheduleRule } from '@/db/schema'
+import type { CycleConfig, CyclingPattern } from '@/db/schema'
+import { isLowStock } from '@/engine/inventory/stock'
+import { isScheduledOn } from '@/engine/scheduling/scheduleRule'
+import { diffLocalDays } from '@/engine/streak/dateUtils'
 
-/** Is this supplement scheduled for the given local date, per its schedule rule? */
-export function isScheduledOn(scheduleRule: ScheduleRule, localDate: string): boolean {
-  switch (scheduleRule.type) {
-    case 'daily':
-      return true
-    case 'weekdays': {
-      const day = getDayOfWeek(localDate)
-      return day >= 1 && day <= 5
-    }
-    case 'custom-days':
-      return scheduleRule.daysOfWeek?.includes(getDayOfWeek(localDate)) ?? false
-  }
-}
+// Re-exported for existing importers — the implementations now live in engine/ since
+// Medication reuses both (see docs/modules/medication.md).
+export { isLowStock, isScheduledOn }
 
 export interface CyclePhaseResult {
   phase: 'on' | 'off'
@@ -59,8 +51,4 @@ export function computeSaturationPercent({ consistentDaysTaken, cycleConfig }: S
   const durationDays = cycleConfig?.loadingPhase?.durationDays ?? DEFAULT_MAINTENANCE_SATURATION_DAYS
   if (durationDays <= 0) return 100
   return Math.min(100, Math.round((consistentDaysTaken / durationDays) * 100))
-}
-
-export function isLowStock(currentStock: number, lowStockThreshold: number): boolean {
-  return currentStock <= lowStockThreshold
 }
