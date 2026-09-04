@@ -297,3 +297,50 @@ fabricating data the app doesn't collect or building speculatively against an un
 This closes every buildable item in the Stage 3 table. The two remaining rows (Capacitor
 wrapper, home-screen widgets) stay unbuilt on purpose — see `docs/ROADMAP.md` for why each is
 gated rather than simply unfinished.
+
+## 2026-09-05 — Stage 3 (part 3): Capacitor Android wrapper, on explicit request
+
+User asked to complete Stage 3 "full." Flagged before proceeding: the Capacitor threshold
+("only if reminders prove unreliable") hadn't been met by real usage data, and this is a Windows
+dev machine (iOS is impossible here regardless — Xcode is macOS-only). Asked how to proceed;
+user chose "scaffold Android only."
+
+- Installed `@capacitor/core`, `@capacitor/android`, `@capacitor/cli` (dev). Added
+  `capacitor.config.ts` (`appId: 'com.lifeos.app'` — placeholder, documented as needing to
+  change before any real Play Store publish). `npx cap add android` generated `android/`;
+  `npx cap sync android` copied the built `dist/` into it.
+- **Went beyond scaffolding to a real verified build**, since this machine turned out to already
+  have a working Android SDK (platforms, build-tools, an emulator AVD) and a JDK — not assumed
+  going in. `./gradlew assembleDebug` initially failed (`invalid source release: 21` — the
+  default `JAVA_HOME` pointed at a JDK 17 install, but `capacitor-android` targets Java 21, and a
+  JDK can only compile *up to* its own version). Fixed by pointing `JAVA_HOME` at a JDK 25
+  install already present on the machine, just for the Gradle invocation. Second attempt: **BUILD
+  SUCCESSFUL**, producing a real ~4.4MB debug APK.
+- Booted the existing emulator AVD, installed the APK via `adb install`, launched it
+  (`adb shell am start`), and screenshotted it: the actual LifeOS home screen rendered correctly
+  inside the native WebView — companion, weekly overview, all 9 module cards, pixel-identical to
+  the browser version, Android status bar visible. Then sent a real touch event
+  (`adb shell input tap`) and confirmed it navigated to the Medication page via React Router,
+  rendering that page's real content (disclaimer text, empty state) with the bottom nav's active
+  tab updating correctly. This is proof of working touch input + client-side routing +
+  IndexedDB/React inside the native shell, not just "the Gradle build didn't fail."
+  - Minor tooling snag along the way: `adb shell` paths starting with `/` (e.g.
+    `/sdcard/screenshot.png`) were being mangled by Git Bash's MSYS path conversion into a
+    bogus Windows path. Fixed with `MSYS_NO_PATHCONV=1` for those specific commands.
+- Documented the full setup/build/verify/update workflow in the new `docs/CAPACITOR.md`,
+  including the explicit callout that **this does not yet solve the original reminder-reliability
+  motivation** — no native notification plugin is wired up, so in-native-app reminders still
+  behave exactly like the browser (in-app-only) until `@capacitor/local-notifications` is added
+  and integrated, which is recorded as the concrete next step if this gets picked up further.
+- `android/` is committed (standard practice for native projects) via its own generated
+  `.gitignore`, which already correctly excludes `local.properties` (machine-specific SDK path),
+  `build/`, `.gradle/`, `*.apk`, and the copied web assets — verified via `git add -n` that only
+  ~50 genuine source/config files would be tracked, no build output.
+- `npm audit` flags a moderate `uuid` advisory via `@capacitor/cli`'s `xcode` dependency (iOS
+  tooling that isn't even used here, since only Android was installed) — a dev-only build-time
+  dependency, never shipped to end users. Not force-fixed, since that would mean a breaking
+  `@capacitor/cli` major-version bump to address a package this project doesn't exercise.
+
+Stage 3 is now complete: every item in the roadmap table is either built or has a definitive,
+documented reason it isn't (hard platform constraint for widgets' remaining gap, Mac-only
+tooling for iOS).

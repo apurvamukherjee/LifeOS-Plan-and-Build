@@ -53,7 +53,10 @@ Not built from the original Stage 2 wish-list: home-screen widgets and Lottie ce
 animations. Both addressed in Stage 3 below — celebrations via a lighter Framer Motion
 substitute, widgets ruled out as infeasible for a plain PWA rather than merely deferred.
 
-## Stage 3 — Retention & polish (in progress)
+## Stage 3 — Retention & polish (complete)
+
+Every item below is either built or definitively resolved (not merely postponed) — see each
+row's note for which.
 
 | Item | Status | Notes |
 |---|---|---|
@@ -61,8 +64,8 @@ substitute, widgets ruled out as infeasible for a plain PWA rather than merely d
 | Weekly cross-module coaching summary | 🟩 | Reuses every module's existing `GoalEvaluator` — see below. |
 | Goal-completion celebration | 🟩 | Framer Motion particle burst, not Lottie — see below. |
 | Optional gentle gamification (companion/avatar) | 🟩 | Simple SVG blob face, not an illustrated character — see below. |
-| Home-screen widgets | ⬜ not feasible | Requires native platform APIs a plain PWA can't reach. |
-| Capacitor native wrapper | ⬜ threshold not met | See reasoning below — do not build speculatively. |
+| Home-screen widgets | ⬜ not feasible on Android app shell alone | Needs native plugin work beyond the base wrapper — see below. |
+| Capacitor native wrapper (Android) | 🟩 scaffolded by user request | Threshold still unmet, but user explicitly asked for it — see below. iOS not attempted (needs a Mac). |
 
 **Weekly coaching summary, not fabricated correlations.** The original spec's "Bearable-style
 correlations" (e.g. mood vs. sleep) assume tracking data LifeOS doesn't collect — there's no
@@ -94,18 +97,24 @@ anytime," not "you're falling behind." This delivers the Finch-style *spirit* (n
 never punishes a quiet week) without needing illustration work; a fuller illustrated character
 remains a possible future upgrade to the same mood/message logic, not a rebuild of it.
 
-**Capacitor wrapper — deliberately not built.** The threshold for this was always conditional:
-"only if in-app + Web Push reminders prove unreliable enough to hurt the medication use case."
-There is no usage data yet suggesting that's true — building it now would be speculative
-engineering against a condition that hasn't been observed. Keep the Medication page's in-app
-disclaimer as the honest interim state; revisit only if real reminder-reliability complaints
-surface. See the "Reminder Service" section of `docs/ARCHITECTURE.md`.
+**Capacitor wrapper — built for Android, on explicit request, threshold still technically
+unmet.** The original threshold ("only if in-app + Web Push reminders prove unreliable enough to
+hurt the medication use case") had not been triggered by any usage data — this was flagged
+explicitly before building it, and the user chose to scaffold Android anyway rather than wait for
+that evidence. See `docs/CAPACITOR.md` for the full setup/build/verification story. Summary: it's
+not just a scaffold — `./gradlew assembleDebug` produces a real debug APK, installed and launched
+on an emulator, with touch input and client-side routing confirmed working inside the native
+WebView. iOS was **not** attempted: it requires Xcode, which only runs on macOS, and this
+environment is Windows — that's a hard tooling constraint, not a scope choice. **This does not
+yet solve the original reminder-reliability motivation** — no native plugin (e.g.
+`@capacitor/local-notifications`) is wired up, so reminders inside the native build still behave
+exactly as they do in the browser (in-app-only). See `docs/CAPACITOR.md`'s "Next steps" for what
+that would take.
 
-**Home-screen widgets — not feasible as scoped.** OS-level home-screen widgets require native
-platform APIs (WidgetKit on iOS, App Widgets on Android) that a plain PWA cannot reach at all,
-with or without more engineering effort — this isn't a prioritization choice, it's a hard
-platform constraint. It would only become possible after (and because of) the Capacitor wrapper
-above, so it's gated on that same unmet threshold.
+**Home-screen widgets — still not feasible.** OS-level home-screen widgets require native
+plugin/platform work (WidgetKit on iOS, App Widgets on Android) beyond what a bare Capacitor
+WebView shell provides — having the Android wrapper now is necessary but not sufficient. Revisit
+only alongside the `@capacitor/local-notifications` work above if there's real appetite for it.
 
 ## Decision thresholds (carried over from the original spec)
 
