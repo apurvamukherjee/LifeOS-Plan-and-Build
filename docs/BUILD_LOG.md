@@ -251,11 +251,49 @@ fabricating data the app doesn't collect or building speculatively against an un
 
 ### Remaining for a future Stage 3 pass
 
-- Gentle gamification (companion/avatar) — deliberately deferred, see `docs/ROADMAP.md` (a
-  visual-design investment, not an engineering one).
 - Capacitor wrapper and home-screen widgets — not built; both gated on conditions/constraints
   documented in `docs/ROADMAP.md`, not simply left undone.
 - The Home page itself is still the single biggest chunk of shared code (every dashboard card's
   live-query hook loads eagerly); further bundle wins would mean making Home's cards themselves
   lazier (e.g. an aggregate summary query instead of one hook per module), which is a bigger
   change than this pass's scope.
+
+## 2026-09-05 — Stage 3 (part 2): companion/avatar gamification
+
+- **`modules/companion/mood.ts`**: `getCompanionMood(stats)` derives `'thriving' | 'content' |
+  'resting'` from the exact same `ModuleWeeklyStat[]` array `insights/weeklySummary.ts` already
+  computes (total days met / total possible days across every streak module, `thriving` at
+  ≥60%, `resting` only when literally nothing was met all week) — zero new queries.
+  `pickCompanionMessage(mood, seed)` is deterministic (day-of-month modulo message-array length),
+  not `Math.random()`, so the message doesn't flicker between different text on every re-render
+  as live queries refresh. 7 unit tests (`mood.test.ts`).
+- **`components/CompanionFace.tsx`**: a small animated SVG blob (~70px) — a circle body in a
+  mood-tinted brand color (streak green / water blue / mind lavender for resting), with
+  eyes+mouth paths that change per mood (closed sleepy eyes for resting, plain smile for
+  content, bigger eyes + wide smile for thriving), plus a continuous gentle "breathing"
+  scale animation via Framer Motion. Explicitly not an illustrated character — this project has
+  no art assets, and per docs/ROADMAP.md a full Finch-style companion is a visual-design
+  investment, not something to improvise into engineering time.
+- **Integration**: embedded directly into `insights/components/WeeklyOverviewCard.tsx` (face +
+  message at the top, coaching headline below, per-module chips below that) rather than given
+  its own separate card — keeps mood/data/detail in one place, the same 3-tier disclosure
+  pattern used by `StatCard` elsewhere.
+- **Verification quirk worth recording**: an early browser-verification pass logged only a
+  partial (150ml) water amount and expected the companion to shift moods — it didn't, and this
+  was correctly NOT a bug: `daysMet` counts *goal-met* days (the same evaluators the streak
+  engine already uses), not "any activity happened," so a sub-goal log correctly doesn't move
+  the needle. Re-verified by actually crossing the water goal (2000ml), which correctly flipped
+  the companion from the resting/lavender/sleepy state to content/blue/smiling in sync with the
+  coaching headline updating — this is the intended behavior, not a workaround.
+- **Final verification**: `npx tsc -b` clean, `npx vitest run` — 15 files, 87/87 tests passing.
+  Full browser pass confirmed both the resting state (fresh DB, correct sleepy message) and the
+  content state (after crossing one module's daily goal, correct smiling face + updated
+  headline + updated per-module chip) render correctly with zero console errors. The `thriving`
+  branch is covered by unit tests only — reaching it live would require backdating several
+  days of logs across multiple modules, which the current action functions don't support (they
+  always timestamp `new Date()`), so it wasn't worth a bespoke seeding path just for this
+  screenshot.
+
+This closes every buildable item in the Stage 3 table. The two remaining rows (Capacitor
+wrapper, home-screen widgets) stay unbuilt on purpose — see `docs/ROADMAP.md` for why each is
+gated rather than simply unfinished.

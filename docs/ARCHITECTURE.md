@@ -142,6 +142,21 @@ replays each over the last 7 local dates (`dateRange.getLastNLocalDates`) to pro
 per module with zero new per-module bookkeeping, plus a one-line shame-free coaching headline
 (strongest area / room to grow — never "you failed").
 
+## Companion (gentle gamification)
+
+`modules/companion/mood.ts` derives one of three moods (`thriving`/`content`/`resting`) from the
+exact `ModuleWeeklyStat[]` the insights module already computes — no new data collection, no
+new queries. `resting` covers total inactivity across every module for the whole week and is
+deliberately framed as sleepy/waiting ("taking a quiet moment"), never sad or failing, matching
+the shame-free tone used throughout (streak-at-risk badges, medication adherence %, etc.).
+`components/CompanionFace.tsx` renders this as a small animated SVG blob (a gentle breathing
+scale animation via Framer Motion, eyes/mouth that change shape per mood) — not an illustrated
+character, since this project has no art assets and a real Finch-style companion is a
+visual-design investment, not an engineering one. It's embedded directly in
+`insights/components/WeeklyOverviewCard.tsx` rather than given its own card, so mood, coaching
+headline, and per-module detail live in one place (the same 3-tier disclosure pattern as
+`StatCard`).
+
 ## Glass design system
 
 Dark-mode-first tokens defined as CSS custom properties + a Tailwind v4 `@theme` block in

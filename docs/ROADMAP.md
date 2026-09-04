@@ -60,7 +60,7 @@ substitute, widgets ruled out as infeasible for a plain PWA rather than merely d
 | Route-level code-splitting | 🟩 | Every detail page now lazy-loads; see `docs/BUILD_LOG.md`. |
 | Weekly cross-module coaching summary | 🟩 | Reuses every module's existing `GoalEvaluator` — see below. |
 | Goal-completion celebration | 🟩 | Framer Motion particle burst, not Lottie — see below. |
-| Optional gentle gamification (companion/avatar) | ⬜ deferred | See reasoning below. |
+| Optional gentle gamification (companion/avatar) | 🟩 | Simple SVG blob face, not an illustrated character — see below. |
 | Home-screen widgets | ⬜ not feasible | Requires native platform APIs a plain PWA can't reach. |
 | Capacitor native wrapper | ⬜ threshold not met | See reasoning below — do not build speculatively. |
 
@@ -82,12 +82,17 @@ pub/sub (same pattern as `engine/sync/syncBus.ts`); `logEvent` now reports `goal
 only on the crossing edge — the goal was unmet before this exact write and met after), and every
 module's log action fires the celebration only on that edge, never on a repeat log the same day.
 
-**Companion/avatar — deferred, not built.** The spec calls this explicitly "optional," and a
-Finch-style illustrated companion with mood states is a genuine visual-design investment (new
-art/animation states, not a data or logic problem) rather than something foldable into an
-afternoon of engineering work. The weekly coaching headline's tone (encouraging, "room to grow"
-never "you failed") carries the same *spirit* — non-judgmental framing — without a new visual
-system. Revisit if/when there's appetite for the illustration work specifically.
+**Companion/avatar — built, but scoped down from "illustrated character."** A full Finch-style
+illustrated companion with hand-drawn mood states is a real visual-design/art investment this
+project has no assets for. What got built instead: `modules/companion/` derives a mood
+(`thriving`/`content`/`resting`) from the exact same weekly stats the coaching summary already
+computes — zero new data collection — and renders it as a simple animated SVG blob face
+(`CompanionFace.tsx`, gentle breathing animation, eyes/mouth that change by mood) embedded in the
+Weekly Overview card, with a short encouraging message underneath. `resting` (no activity at all
+this week) is deliberately framed as sleepy/waiting, never sad — "Taking a quiet moment — say hi
+anytime," not "you're falling behind." This delivers the Finch-style *spirit* (non-judgmental,
+never punishes a quiet week) without needing illustration work; a fuller illustrated character
+remains a possible future upgrade to the same mood/message logic, not a rebuild of it.
 
 **Capacitor wrapper — deliberately not built.** The threshold for this was always conditional:
 "only if in-app + Web Push reminders prove unreliable enough to hurt the medication use case."
