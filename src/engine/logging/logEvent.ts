@@ -26,21 +26,33 @@ interface LogEventParams<T> {
   timeZone?: string
 }
 
+export interface LogEventOutcome<T> {
+  result: T
+  /** True only on the crossing edge — the goal was NOT met before this write and IS met after.
+   * False on every subsequent log the same day once the goal is already met, so callers can use
+   * this to trigger a celebration exactly once per day rather than on every repeat log. */
+  goalNewlyMet: boolean
+}
+
 /**
  * Wraps a module's log-row insert and its streak update in a single IndexedDB transaction, so
  * a UI action can never leave a log written with a stale streak. See docs/ARCHITECTURE.md
  * ("Streak engine" section) for the full design.
  */
-export async function logEvent<T>(params: LogEventParams<T>): Promise<T> {
+export async function logEvent<T>(params: LogEventParams<T>): Promise<LogEventOutcome<T>> {
   const timeZone = params.timeZone ?? getCurrentTimeZone()
   const localDate = toLocalDateString(new Date().toISOString(), timeZone)
 
-  const result = await db.transaction('rw', [...params.tablesInvolved, db.streaks], async () => {
+  const outcome = await db.transaction('rw', [...params.tablesInvolved, db.streaks], async () => {
     const logResult = await params.writeLog()
 
     const goalMet = await params.goalEvaluator.isGoalMet(localDate, timeZone)
+    let goalNewlyMet = false
+
     if (goalMet) {
       const existing = await db.streaks.where('moduleKey').equals(params.moduleKey).first()
+      goalNewlyMet = existing?.lastCompletedLocalDate !== localDate
+
       const base: Streak =
         existing ??
         stampNewRecord<Streak>({ moduleKey: params.moduleKey, ...EMPTY_STREAK_STATE })
@@ -53,9 +65,9 @@ export async function logEvent<T>(params: LogEventParams<T>): Promise<T> {
       })
     }
 
-    return logResult
+    return { result: logResult, goalNewlyMet }
   })
 
   notifyLocalWrite()
-  return result
+  return outcome
 }

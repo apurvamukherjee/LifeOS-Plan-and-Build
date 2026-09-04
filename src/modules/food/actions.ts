@@ -1,6 +1,7 @@
 import { db } from '@/db'
 import { addFoodLogRaw, createFood } from '@/db/repositories/foodRepo'
 import type { MealSlot } from '@/db/schema'
+import { triggerCelebration } from '@/engine/celebration/celebrationBus'
 import { logEvent } from '@/engine/logging/logEvent'
 import { FOOD_MODULE_KEY, foodGoalEvaluator } from './goal'
 
@@ -19,7 +20,7 @@ export interface QuickAddFoodParams {
  * as a saved meal only if the user opted in — otherwise it just won't show up in the quick-pick
  * saved-meals list. */
 export async function logQuickAddFood(params: QuickAddFoodParams): Promise<void> {
-  await logEvent({
+  const { goalNewlyMet } = await logEvent({
     moduleKey: FOOD_MODULE_KEY,
     tablesInvolved: [db.foodLogs, db.foods, db.settings],
     writeLog: async () => {
@@ -42,11 +43,12 @@ export async function logQuickAddFood(params: QuickAddFoodParams): Promise<void>
     },
     goalEvaluator: foodGoalEvaluator,
   })
+  if (goalNewlyMet) triggerCelebration()
 }
 
 /** One-tap re-log of an existing saved meal — the highest-leverage path for repeat eaters. */
 export async function logSavedMeal(foodId: string, mealSlot: MealSlot, servings = 1): Promise<void> {
-  await logEvent({
+  const { goalNewlyMet } = await logEvent({
     moduleKey: FOOD_MODULE_KEY,
     tablesInvolved: [db.foodLogs, db.settings],
     writeLog: () =>
@@ -59,4 +61,5 @@ export async function logSavedMeal(foodId: string, mealSlot: MealSlot, servings 
       }),
     goalEvaluator: foodGoalEvaluator,
   })
+  if (goalNewlyMet) triggerCelebration()
 }

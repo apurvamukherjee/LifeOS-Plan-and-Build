@@ -1,6 +1,7 @@
 import { db } from '@/db'
 import { addMedicationLogRaw, adjustMedicationStock } from '@/db/repositories/medicationRepo'
 import type { MedicationLogStatus } from '@/db/schema'
+import { triggerCelebration } from '@/engine/celebration/celebrationBus'
 import { logEvent } from '@/engine/logging/logEvent'
 import { MEDICATION_MODULE_KEY, medicationGoalEvaluator } from './goal'
 
@@ -8,7 +9,7 @@ export async function logMedicationDose(
   medicationId: string,
   status: MedicationLogStatus = 'taken',
 ): Promise<void> {
-  await logEvent({
+  const { goalNewlyMet } = await logEvent({
     moduleKey: MEDICATION_MODULE_KEY,
     tablesInvolved: [db.medicationLogs, db.medications, db.settings],
     writeLog: async () => {
@@ -20,4 +21,5 @@ export async function logMedicationDose(
     },
     goalEvaluator: medicationGoalEvaluator,
   })
+  if (goalNewlyMet) triggerCelebration()
 }

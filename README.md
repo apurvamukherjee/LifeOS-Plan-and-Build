@@ -2,8 +2,9 @@
 
 An offline-first, glassmorphic lifestyle-tracker PWA. All 9 modules from the original spec are
 built: **Water, Supplements, Tasks, Medication, Food, Gym, Expenses, Wishlist, Notes** — sharing
-one logging/streak/reminder engine. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for what's next
-(Stage 3: insights, gamification polish, an optional Capacitor native wrapper).
+one logging/streak/reminder engine, a weekly cross-module coaching summary on Home, and a
+particle-burst celebration on goal completion. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for
+what's left in Stage 3 and why a few items there are deliberately not built.
 
 ## Getting started
 

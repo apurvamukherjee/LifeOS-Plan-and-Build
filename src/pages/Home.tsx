@@ -2,6 +2,7 @@ import { NotificationPermissionBanner } from '@/components/ui/NotificationPermis
 import { ExpensesDashboardCard } from '@/modules/expenses/components/ExpensesDashboardCard'
 import { FoodDashboardCard } from '@/modules/food/components/FoodDashboardCard'
 import { GymDashboardCard } from '@/modules/gym/components/GymDashboardCard'
+import { WeeklyOverviewCard } from '@/modules/insights/components/WeeklyOverviewCard'
 import { MedicationDashboardCard } from '@/modules/medication/components/MedicationDashboardCard'
 import { NotesDashboardCard } from '@/modules/notes/components/NotesDashboardCard'
 import { SupplementDashboardCard } from '@/modules/supplements/components/SupplementDashboardCard'
@@ -17,6 +18,7 @@ export function Home() {
         <h1 className="text-2xl font-semibold">LifeOS</h1>
       </header>
       <NotificationPermissionBanner />
+      <WeeklyOverviewCard />
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
           <WaterDashboardCard />

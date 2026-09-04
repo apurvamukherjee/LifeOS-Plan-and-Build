@@ -50,23 +50,57 @@ correctly triggered a PR celebration), confirmed the home dashboard's bento grid
 module's live state (including streaks), zero console errors throughout.
 
 Not built from the original Stage 2 wish-list: home-screen widgets and Lottie celebration
-animations (OS/browser-level widgets aren't feasible for a plain PWA without a native wrapper;
-Lottie was deferred as pure visual polish — the Gym module's text-based PR celebration covers
-the "delight on achievement" moment for now). Revisit both in Stage 3 if it's worth the added
-dependency weight.
+animations. Both addressed in Stage 3 below — celebrations via a lighter Framer Motion
+substitute, widgets ruled out as infeasible for a plain PWA rather than merely deferred.
 
-## Stage 3 — Retention & polish (not started)
+## Stage 3 — Retention & polish (in progress)
 
-- Insights/correlations across modules (Bearable-style "what improves my streaks")
-- Whoop-style data-as-coaching summaries
-- Optional gentle gamification (companion/avatar, à la Finch)
-- Lottie celebration animations; home-screen widgets (likely requires the Capacitor wrapper below)
-- **Capacitor native wrapper** — only if in-app + Web Push reminders prove unreliable enough to
-  hurt the medication use case; do not treat PWA scheduling as reliable for anything
-  safety-relevant. See the "Reminder Service" section of `docs/ARCHITECTURE.md`. The Medication
-  module's page carries an explicit in-app disclaimer about this until it's resolved.
-- Revisit the ~550KB production bundle (route-level code-splitting) now that all 9 modules exist
-  — flagged in `docs/BUILD_LOG.md`, not urgent but worth addressing before it grows further.
+| Item | Status | Notes |
+|---|---|---|
+| Route-level code-splitting | 🟩 | Every detail page now lazy-loads; see `docs/BUILD_LOG.md`. |
+| Weekly cross-module coaching summary | 🟩 | Reuses every module's existing `GoalEvaluator` — see below. |
+| Goal-completion celebration | 🟩 | Framer Motion particle burst, not Lottie — see below. |
+| Optional gentle gamification (companion/avatar) | ⬜ deferred | See reasoning below. |
+| Home-screen widgets | ⬜ not feasible | Requires native platform APIs a plain PWA can't reach. |
+| Capacitor native wrapper | ⬜ threshold not met | See reasoning below — do not build speculatively. |
+
+**Weekly coaching summary, not fabricated correlations.** The original spec's "Bearable-style
+correlations" (e.g. mood vs. sleep) assume tracking data LifeOS doesn't collect — there's no
+mood/symptom tracker here. Instead, `src/modules/insights/` builds a genuinely Whoop-style
+"data-as-coaching" summary from data the app actually has: every streak-bearing module already
+exposes a `GoalEvaluator.isGoalMet(localDate, timeZone)` (see `docs/ARCHITECTURE.md`), and
+because that's a pure historical read (not dependent on today's mutable streak state), the same
+evaluators can be replayed over the last 7 days with zero new per-module bookkeeping. A "This
+week" card on Home shows an X/7 chip per module plus a one-line, shame-free coaching headline
+(strongest area / room to grow) generated from that data.
+
+**Celebration, not Lottie.** Stage 2 deferred Lottie as pure visual polish; for Stage 3 the
+actual "delight on goal completion" moment was worth building, but a full Lottie player + JSON
+asset is meaningfully heavier than a burst of Framer-Motion-animated particles (already a
+dependency) that achieves the same moment. `engine/celebration/celebrationBus.ts` is a tiny
+pub/sub (same pattern as `engine/sync/syncBus.ts`); `logEvent` now reports `goalNewlyMet` (true
+only on the crossing edge — the goal was unmet before this exact write and met after), and every
+module's log action fires the celebration only on that edge, never on a repeat log the same day.
+
+**Companion/avatar — deferred, not built.** The spec calls this explicitly "optional," and a
+Finch-style illustrated companion with mood states is a genuine visual-design investment (new
+art/animation states, not a data or logic problem) rather than something foldable into an
+afternoon of engineering work. The weekly coaching headline's tone (encouraging, "room to grow"
+never "you failed") carries the same *spirit* — non-judgmental framing — without a new visual
+system. Revisit if/when there's appetite for the illustration work specifically.
+
+**Capacitor wrapper — deliberately not built.** The threshold for this was always conditional:
+"only if in-app + Web Push reminders prove unreliable enough to hurt the medication use case."
+There is no usage data yet suggesting that's true — building it now would be speculative
+engineering against a condition that hasn't been observed. Keep the Medication page's in-app
+disclaimer as the honest interim state; revisit only if real reminder-reliability complaints
+surface. See the "Reminder Service" section of `docs/ARCHITECTURE.md`.
+
+**Home-screen widgets — not feasible as scoped.** OS-level home-screen widgets require native
+platform APIs (WidgetKit on iOS, App Widgets on Android) that a plain PWA cannot reach at all,
+with or without more engineering effort — this isn't a prioritization choice, it's a hard
+platform constraint. It would only become possible after (and because of) the Capacitor wrapper
+above, so it's gated on that same unmet threshold.
 
 ## Decision thresholds (carried over from the original spec)
 

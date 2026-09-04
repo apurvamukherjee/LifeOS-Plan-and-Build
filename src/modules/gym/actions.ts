@@ -1,6 +1,7 @@
 import { db } from '@/db'
 import { addWorkoutSetRaw, finishWorkoutRaw, listSetsForWorkout } from '@/db/repositories/gymRepo'
 import type { WorkoutSet } from '@/db/schema'
+import { triggerCelebration } from '@/engine/celebration/celebrationBus'
 import { logEvent } from '@/engine/logging/logEvent'
 import { GYM_MODULE_KEY, gymGoalEvaluator } from './goal'
 
@@ -19,10 +20,11 @@ export async function logSet(params: {
 }
 
 export async function finishWorkout(workoutId: string): Promise<void> {
-  await logEvent({
+  const { goalNewlyMet } = await logEvent({
     moduleKey: GYM_MODULE_KEY,
     tablesInvolved: [db.workouts, db.settings],
     writeLog: () => finishWorkoutRaw(workoutId),
     goalEvaluator: gymGoalEvaluator,
   })
+  if (goalNewlyMet) triggerCelebration()
 }

@@ -196,3 +196,66 @@ Append-only, dated. One entry per build phase (see `docs/ROADMAP.md` for the pha
 - `recurringBills` has no auto-generation UI (CRUD-only in the repo layer).
 - Lottie celebrations and home-screen widgets from the original spec remain unbuilt — see
   `docs/ROADMAP.md` Stage 3.
+
+## 2026-09-05 — Stage 3 (part 1): weekly coaching summary, celebrations, code-splitting
+
+Scoped Stage 3 deliberately: built the three items that were concretely buildable without
+fabricating data the app doesn't collect or building speculatively against an unmet threshold
+(reasoning for each skip is in `docs/ROADMAP.md`'s Stage 3 table, not repeated here).
+
+- **`logEvent` now reports `goalNewlyMet`**: changed its return type from `T` to
+  `{ result: T; goalNewlyMet: boolean }`, computed by checking whether the streak's
+  `lastCompletedLocalDate` was already today *before* `recordGoalMet` runs — true only on the
+  exact crossing edge, so a repeat log the same day (goal already met) doesn't re-report it.
+  Updated all 8 call sites across the 7 action-function files to destructure the new shape.
+  2 new unit tests (`engine/logging/logEvent.test.ts`) cover the crossing-edge case explicitly
+  (log below goal → false, log that crosses it → true, log again after → false) plus the
+  never-met case.
+- **Celebration system**: `engine/celebration/celebrationBus.ts` (pub/sub, same pattern as
+  `engine/sync/syncBus.ts`) + `components/ui/CelebrationOverlay.tsx` (mounted once in `App.tsx`,
+  subscribes and renders a Framer Motion particle burst). Deliberately NOT Lottie — Framer
+  Motion is already a dependency and delivers the same "delight on completion" moment without a
+  player + JSON asset. Every module's log-action function now fires `triggerCelebration()` when
+  `goalNewlyMet` is true.
+  - Bug caught by browser testing, not unit tests: the particles' `exit` transition was
+    inheriting the ~1.5s flight-animation duration from a shared `transition` prop, so the
+    (already-invisible) DOM nodes lingered for another 1.5s after `setParticles(null)` — a
+    second log shortly after the first showed a false "repeat celebration" in a Playwright check
+    that was actually just the first burst's stale nodes. Fixed by nesting an explicit fast
+    `transition: { duration: 0.15 }` inside the `exit` target specifically, decoupled from the
+    `animate` target's own nested transition.
+- **Weekly coaching summary** (`modules/insights/`): reinterpreted the spec's "Bearable-style
+  correlations" for data LifeOS actually has (no mood/symptom tracker exists to correlate
+  against). Key reuse: every streak-bearing module's `GoalEvaluator` is a pure historical read,
+  so replaying it over the last 7 local dates (`dateRange.getLastNLocalDates` +
+  `countGoalMetDays`) needed zero new per-module bookkeeping — just a registry
+  (`moduleRegistry.ts`) listing each module's existing evaluator. `generateCoachingHeadline`
+  picks the strongest/weakest module and frames it shame-free ("room to grow," never "failed").
+  Surfaced as a new "This week" card at the top of Home. 7 new unit tests across
+  `dateRange.test.ts` (incl. a fake-timers test for date-range correctness) and
+  `weeklySummary.test.ts` (headline branching logic).
+- **Route-level code-splitting**: every detail page in `router.tsx` is now `React.lazy` behind
+  one `Suspense` boundary; `Home` stays eager since it already needs every module's dashboard
+  card. Production build's single ~550KB bundle is now a ~263KB main chunk + a ~228KB
+  `dexie-react-hooks` chunk + a `streakEngine` chunk (~28KB, shared across every goal evaluator)
+  + one small (2-7KB) chunk per page — the chunk-size warning is gone. Total bytes for a
+  Home-only visit didn't drop dramatically (Home's dashboard cards still pull in most shared
+  code), but incremental navigation cost and the ceiling on future-module growth both did.
+- **Final verification**: `npx tsc -b` clean, `npx vitest run` — 14 files, 80/80 tests passing,
+  `npm run build` succeeds with no chunk-size warning. Full browser pass (Playwright): confirmed
+  the empty-state coaching headline, crossed the water goal and watched the celebration fire
+  (confirmed via the exit-transition bugfix above), confirmed a second log the same day did NOT
+  re-trigger it, confirmed the weekly card updated to reflect the new streak, and exercised two
+  lazy-loaded routes (Gym, Notes) to confirm code-splitting introduced no loading regressions.
+  Zero console errors throughout.
+
+### Remaining for a future Stage 3 pass
+
+- Gentle gamification (companion/avatar) — deliberately deferred, see `docs/ROADMAP.md` (a
+  visual-design investment, not an engineering one).
+- Capacitor wrapper and home-screen widgets — not built; both gated on conditions/constraints
+  documented in `docs/ROADMAP.md`, not simply left undone.
+- The Home page itself is still the single biggest chunk of shared code (every dashboard card's
+  live-query hook loads eagerly); further bundle wins would mean making Home's cards themselves
+  lazier (e.g. an aggregate summary query instead of one hook per module), which is a bigger
+  change than this pass's scope.

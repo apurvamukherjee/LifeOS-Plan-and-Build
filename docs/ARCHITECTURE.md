@@ -1,4 +1,4 @@
-# LifeOS Architecture (Stage 1 MVP)
+# LifeOS Architecture
 
 ## Stack
 
@@ -64,6 +64,13 @@ See [`docs/DATA_MODEL.md`](./DATA_MODEL.md) for the `streaks` table shape. Full 
 - **Atomicity:** `logEvent()` wraps the log-row insert and the streak read/write in one
   `db.transaction('rw', [logTable, streaksTable], ...)`, so a UI action never leaves the log
   written with a stale streak.
+- **`goalNewlyMet`:** `logEvent()` returns `{ result, goalNewlyMet }` — `goalNewlyMet` is true
+  only on the crossing edge (the goal was unmet immediately before this write and is met
+  immediately after), computed by comparing the streak's `lastCompletedLocalDate` to today
+  *before* calling `recordGoalMet`. Every module's action function checks this and fires
+  `engine/celebration/celebrationBus.triggerCelebration()` when true — see "Celebration system"
+  below. This is what stops a celebration from re-firing on every repeat log once a goal is
+  already met for the day.
 
 ## Sync engine
 
@@ -108,6 +115,33 @@ worker via `VitePWA({ workbox: { importScripts: ['push-handler.js'] } })` — th
 module). If reminder timeliness ever matters that much, see the Capacitor note in
 `docs/ROADMAP.md` Stage 3.
 
+## Celebration system
+
+`engine/celebration/celebrationBus.ts` is a tiny pub/sub (same shape as `engine/sync/syncBus.ts`)
+so any module's action function can fire a celebration without importing the UI layer.
+`components/ui/CelebrationOverlay.tsx` is mounted once near the app root (`App.tsx`) and
+subscribes; on trigger it renders a burst of Framer-Motion-animated emoji particles. This is a
+deliberate substitute for the original spec's "Lottie confetti" — Framer Motion is already a
+dependency, so a particle burst delivers the same "delight on completion" moment without a
+Lottie player + JSON asset. Gotcha worth knowing if you touch this: give the particles' `exit`
+transition its own short explicit duration (nested inside the `exit` target object, not the
+shared `transition` prop) — otherwise exit inherits the multi-second flight-animation duration
+even though the particle is already invisible by then, and the (invisible) DOM nodes linger far
+longer than intended.
+
+## Insights (weekly coaching summary)
+
+`modules/insights/` builds a Whoop-style "data-as-coaching" summary from data the app actually
+collects — deliberately not the original spec's "Bearable-style correlations" (mood/sleep, etc.),
+since LifeOS has no mood or symptom tracker to correlate against. The key structural insight:
+every streak-bearing module already exposes a `GoalEvaluator.isGoalMet(localDate, timeZone)`
+(see "Streak engine" above), and because that's a pure historical read over that date's logs —
+not dependent on today's mutable streak row — the same evaluators can be replayed over any past
+date. `moduleRegistry.ts` lists every streak-bearing module's evaluator; `weeklySummary.ts`
+replays each over the last 7 local dates (`dateRange.getLastNLocalDates`) to produce an X/7 count
+per module with zero new per-module bookkeeping, plus a one-line shame-free coaching headline
+(strongest area / room to grow — never "you failed").
+
 ## Glass design system
 
 Dark-mode-first tokens defined as CSS custom properties + a Tailwind v4 `@theme` block in
@@ -118,6 +152,15 @@ prefix and an `@supports not (backdrop-filter: blur(1px))` opaque fallback; `@me
 (prefers-reduced-transparency: reduce)` also forces the opaque fallback; `@media
 (prefers-reduced-motion: reduce)` disables spring/entrance animation. Used strategically (nav
 bar, cards, modals) — never on large flat backgrounds.
+
+## Performance: route-level code-splitting
+
+`router.tsx` wraps every detail page (everything except `Home`) in `React.lazy` + a single
+`Suspense` boundary. `Home` stays eagerly bundled since it's the landing page and already needs
+every module's `*DashboardCard` component; each page's fuller UI (forms, lists, module-specific
+logic) only loads on navigation. This is what keeps a 10th module from growing the initial
+bundle — added after Stage 2 pushed the single bundle to ~550KB and tripped Vite's chunk-size
+warning; per-page chunks are now a few KB each and the warning is gone.
 
 ## Testing
 

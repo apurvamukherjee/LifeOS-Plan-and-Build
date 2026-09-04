@@ -1,5 +1,6 @@
 import { db } from '@/db'
 import { createTask, updateTask } from '@/db/repositories/tasksRepo'
+import { triggerCelebration } from '@/engine/celebration/celebrationBus'
 import { logEvent } from '@/engine/logging/logEvent'
 import { getCurrentTimeZone, toLocalDateString } from '@/engine/streak/dateUtils'
 import { TASKS_MODULE_KEY, tasksGoalEvaluator } from './goal'
@@ -12,7 +13,7 @@ import { getNextDueDate } from './recurrence'
  * transaction, since the evaluator and the write share one atomic logEvent.
  */
 export async function completeTask(id: string): Promise<void> {
-  await logEvent({
+  const { goalNewlyMet } = await logEvent({
     moduleKey: TASKS_MODULE_KEY,
     tablesInvolved: [db.tasks, db.settings],
     writeLog: async () => {
@@ -38,6 +39,7 @@ export async function completeTask(id: string): Promise<void> {
     },
     goalEvaluator: tasksGoalEvaluator,
   })
+  if (goalNewlyMet) triggerCelebration()
 }
 
 export async function uncompleteTask(id: string): Promise<void> {

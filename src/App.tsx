@@ -1,5 +1,6 @@
 import { AuthGate } from '@/components/auth/AuthGate'
 import { AppShell } from '@/components/layout/AppShell'
+import { CelebrationOverlay } from '@/components/ui/CelebrationOverlay'
 import { useAppForegroundEffects } from '@/hooks/useAppForegroundEffects'
 import { useSyncEngine } from '@/hooks/useSyncEngine'
 import { AppRoutes } from './router'
@@ -13,6 +14,7 @@ export default function App() {
       <AppShell>
         <AppRoutes />
       </AppShell>
+      <CelebrationOverlay />
     </AuthGate>
   )
 }

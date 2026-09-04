@@ -1,12 +1,13 @@
 import { db } from '@/db'
 import { addSupplementLogRaw, adjustStock } from '@/db/repositories/supplementsRepo'
+import { triggerCelebration } from '@/engine/celebration/celebrationBus'
 import { logEvent } from '@/engine/logging/logEvent'
 import { SUPPLEMENTS_MODULE_KEY, supplementsGoalEvaluator } from './goal'
 
 /** Logs one dose. Assumes 1 stock unit consumed per dose (e.g. one pill/scoop) — refine if a
  * future supplement needs finer-grained unit tracking than "doses remaining". */
 export async function logSupplementDose(supplementId: string, amount: number): Promise<void> {
-  await logEvent({
+  const { goalNewlyMet } = await logEvent({
     moduleKey: SUPPLEMENTS_MODULE_KEY,
     tablesInvolved: [db.supplementLogs, db.supplements, db.settings],
     writeLog: async () => {
@@ -16,4 +17,5 @@ export async function logSupplementDose(supplementId: string, amount: number): P
     },
     goalEvaluator: supplementsGoalEvaluator,
   })
+  if (goalNewlyMet) triggerCelebration()
 }
