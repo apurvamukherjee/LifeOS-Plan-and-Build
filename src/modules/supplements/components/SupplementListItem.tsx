@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/Button'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { deleteSupplement } from '@/db/repositories/supplementsRepo'
 import type { Supplement } from '@/db/schema'
+import { Check, Trash2 } from 'lucide-react'
 import { logSupplementDose } from '../actions'
 import { isLowStock } from '../cycleLogic'
 import { useSaturationPercent } from '../hooks/useSaturationPercent'
@@ -36,15 +37,17 @@ export function SupplementListItem({ supplement, takenToday }: SupplementListIte
         <button
           type="button"
           onClick={() => deleteSupplement(supplement.id)}
-          className="text-xs text-(--color-text-muted) underline"
+          className="flex items-center gap-1 text-xs text-(--color-text-muted) underline"
         >
-          remove
+          <Trash2 size={12} /> remove
         </button>
         <Button
           variant={takenToday ? 'glass' : 'primary'}
           onClick={() => logSupplementDose(supplement.id, supplement.doseAmount)}
+          className="flex items-center gap-1"
         >
-          {takenToday ? '✓ Taken' : 'Log dose'}
+          {takenToday && <Check size={14} strokeWidth={3} />}
+          {takenToday ? 'Taken' : 'Log dose'}
         </Button>
       </div>
     </GlassCard>

@@ -1,14 +1,21 @@
 import { onCelebration } from '@/engine/celebration/celebrationBus'
+import { Dumbbell, Flame, PartyPopper, Sparkles, type LucideIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 
 const PARTICLE_COUNT = 14
-const PARTICLE_EMOJI = ['🎉', '✨', '🔥', '💪']
+const PARTICLE_KINDS: { Icon: LucideIcon; colorVar: string }[] = [
+  { Icon: PartyPopper, colorVar: '--color-action' },
+  { Icon: Sparkles, colorVar: '--color-water' },
+  { Icon: Flame, colorVar: '--color-streak' },
+  { Icon: Dumbbell, colorVar: '--color-mind' },
+]
 const VISIBLE_DURATION_MS = 1500
 
 interface Particle {
   id: number
-  emoji: string
+  Icon: LucideIcon
+  colorVar: string
   angle: number
   distance: number
 }
@@ -16,7 +23,7 @@ interface Particle {
 function makeParticles(): Particle[] {
   return Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
     id: i,
-    emoji: PARTICLE_EMOJI[i % PARTICLE_EMOJI.length],
+    ...PARTICLE_KINDS[i % PARTICLE_KINDS.length],
     angle: (i / PARTICLE_COUNT) * Math.PI * 2 + Math.random() * 0.5,
     distance: 80 + Math.random() * 60,
   }))
@@ -24,9 +31,9 @@ function makeParticles(): Particle[] {
 
 /**
  * A lightweight, dependency-free stand-in for the original spec's "Lottie confetti" — a burst
- * of emoji particles built with Framer Motion (already a dependency) rather than pulling in a
- * Lottie player + JSON asset for one moment. Mount once near the app root; any action can fire
- * it via engine/celebration/celebrationBus without importing this component directly.
+ * of Lucide icon particles built with Framer Motion (already a dependency) rather than pulling
+ * in a Lottie player + JSON asset for one moment. Mount once near the app root; any action can
+ * fire it via engine/celebration/celebrationBus without importing this component directly.
  */
 export function CelebrationOverlay() {
   const [particles, setParticles] = useState<Particle[] | null>(null)
@@ -45,7 +52,8 @@ export function CelebrationOverlay() {
         {particles?.map((particle) => (
           <motion.span
             key={particle.id}
-            className="absolute text-2xl"
+            className="absolute"
+            style={{ color: `var(${particle.colorVar})` }}
             initial={{ x: 0, y: 0, opacity: 1, scale: 0.5 }}
             animate={{
               x: Math.cos(particle.angle) * particle.distance,
@@ -59,7 +67,7 @@ export function CelebrationOverlay() {
             // node lingers in the DOM for another 1.5s before actually unmounting.
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
           >
-            {particle.emoji}
+            <particle.Icon size={24} strokeWidth={2} fill="currentColor" fillOpacity={0.15} />
           </motion.span>
         ))}
       </AnimatePresence>

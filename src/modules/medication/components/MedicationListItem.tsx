@@ -3,6 +3,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { deleteMedication } from '@/db/repositories/medicationRepo'
 import type { Medication } from '@/db/schema'
 import { isLowStock } from '@/engine/inventory/stock'
+import { Check, Trash2 } from 'lucide-react'
 import { logMedicationDose } from '../actions'
 import { useAdherencePercent } from '../hooks/useAdherence'
 
@@ -39,15 +40,17 @@ export function MedicationListItem({ medication, takenToday }: MedicationListIte
         <button
           type="button"
           onClick={() => deleteMedication(medication.id)}
-          className="text-xs text-(--color-text-muted) underline"
+          className="flex items-center gap-1 text-xs text-(--color-text-muted) underline"
         >
-          remove
+          <Trash2 size={12} /> remove
         </button>
         <Button
           variant={takenToday ? 'glass' : 'primary'}
           onClick={() => logMedicationDose(medication.id, 'taken')}
+          className="flex items-center gap-1"
         >
-          {takenToday ? '✓ Taken' : 'Log dose'}
+          {takenToday && <Check size={14} strokeWidth={3} />}
+          {takenToday ? 'Taken' : 'Log dose'}
         </Button>
       </div>
     </GlassCard>

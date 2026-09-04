@@ -1,6 +1,7 @@
 import { GlassCard } from '@/components/ui/GlassCard'
 import { deleteWishlistItem, setWishlistItemStatus } from '@/db/repositories/wishlistRepo'
 import type { WishlistItem } from '@/db/schema'
+import { CircleCheck, PackageX, Trash2 } from 'lucide-react'
 
 export function WishlistItemRow({ item }: { item: WishlistItem }) {
   const subtotal = item.price * item.quantity
@@ -21,25 +22,25 @@ export function WishlistItemRow({ item }: { item: WishlistItem }) {
           <button
             type="button"
             onClick={() => setWishlistItemStatus(item.id, 'purchased')}
-            className="text-streak underline"
+            className="flex items-center gap-1 text-streak underline"
           >
-            bought it
+            <CircleCheck size={12} /> bought it
           </button>
           <button
             type="button"
             onClick={() => setWishlistItemStatus(item.id, 'archived')}
-            className="text-(--color-text-muted) underline"
+            className="flex items-center gap-1 text-(--color-text-muted) underline"
           >
-            out of stock
+            <PackageX size={12} /> out of stock
           </button>
         </div>
       ) : (
         <button
           type="button"
           onClick={() => deleteWishlistItem(item.id)}
-          className="text-xs text-(--color-text-muted) underline"
+          className="flex items-center gap-1 text-xs text-(--color-text-muted) underline"
         >
-          remove
+          <Trash2 size={12} /> remove
         </button>
       )}
     </GlassCard>

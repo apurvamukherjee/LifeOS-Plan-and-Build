@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/Button'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { createExercise } from '@/db/repositories/gymRepo'
 import type { Workout } from '@/db/schema'
+import { Trophy } from 'lucide-react'
 import { useState } from 'react'
 import { finishWorkout, logSet } from '../actions'
 import { useAllSets, useExercises, useWorkoutSets } from '../hooks/useGym'
@@ -130,7 +131,11 @@ export function ActiveWorkoutSession({ workout }: { workout: Workout }) {
         <Button variant="primary" onClick={handleLogSet} disabled={!selectedExerciseId}>
           Log set
         </Button>
-        {prCelebration && <span className="text-xs text-streak">🎉 New PR for {prCelebration}!</span>}
+        {prCelebration && (
+          <span className="flex items-center gap-1 text-xs text-streak">
+            <Trophy size={14} /> New PR for {prCelebration}!
+          </span>
+        )}
       </GlassCard>
 
       {sets && sets.length > 0 && (

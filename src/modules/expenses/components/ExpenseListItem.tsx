@@ -2,6 +2,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { deleteExpense } from '@/db/repositories/expensesRepo'
 import type { Expense } from '@/db/schema'
 import clsx from 'clsx'
+import { Trash2 } from 'lucide-react'
 
 export function ExpenseListItem({ expense }: { expense: Expense }) {
   return (
@@ -22,9 +23,9 @@ export function ExpenseListItem({ expense }: { expense: Expense }) {
         <button
           type="button"
           onClick={() => deleteExpense(expense.id)}
-          className="text-xs text-(--color-text-muted) underline"
+          className="flex items-center gap-1 text-xs text-(--color-text-muted) underline"
         >
-          remove
+          <Trash2 size={12} /> remove
         </button>
       </div>
     </GlassCard>

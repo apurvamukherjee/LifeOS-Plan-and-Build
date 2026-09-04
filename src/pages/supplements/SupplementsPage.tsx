@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/Button'
+import { AddToggleButton } from '@/components/ui/AddToggleButton'
 import { AddSupplementForm } from '@/modules/supplements/components/AddSupplementForm'
 import { SupplementListItem } from '@/modules/supplements/components/SupplementListItem'
 import { useSupplementLogsToday } from '@/modules/supplements/hooks/useSupplementLogsToday'
@@ -14,9 +14,7 @@ export function SupplementsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Supplements</h1>
-        <Button variant="glass" onClick={() => setShowAddForm((prev) => !prev)}>
-          {showAddForm ? 'Close' : '+ Add'}
-        </Button>
+        <AddToggleButton isOpen={showAddForm} onToggle={() => setShowAddForm((prev) => !prev)} />
       </div>
 
       {showAddForm && <AddSupplementForm onAdded={() => setShowAddForm(false)} />}

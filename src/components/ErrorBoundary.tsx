@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button'
+import { Frown } from 'lucide-react'
 import { Component, type ReactNode } from 'react'
 
 interface ErrorBoundaryProps {
@@ -25,7 +26,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
-        <span className="text-2xl">😵</span>
+        <Frown size={40} className="text-(--color-text-muted)" />
         <h1 className="text-lg font-semibold">Something went wrong</h1>
         <p className="text-sm text-(--color-text-secondary)">
           Your data is safe — it's stored locally on this device. Reloading usually fixes this.

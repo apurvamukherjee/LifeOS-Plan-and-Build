@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/Button'
+import { AddToggleButton } from '@/components/ui/AddToggleButton'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { AddWishlistItemForm } from '@/modules/wishlist/components/AddWishlistItemForm'
 import { WishlistItemRow } from '@/modules/wishlist/components/WishlistItemRow'
@@ -19,9 +19,7 @@ export function WishlistPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Wishlist</h1>
-        <Button variant="glass" onClick={() => setShowAddForm((prev) => !prev)}>
-          {showAddForm ? 'Close' : '+ Add'}
-        </Button>
+        <AddToggleButton isOpen={showAddForm} onToggle={() => setShowAddForm((prev) => !prev)} />
       </div>
 
       <GlassCard className="flex flex-col gap-2">

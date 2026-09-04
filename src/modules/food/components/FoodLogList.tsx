@@ -1,5 +1,6 @@
 import { GlassCard } from '@/components/ui/GlassCard'
 import { deleteFoodLog } from '@/db/repositories/foodRepo'
+import { Undo2 } from 'lucide-react'
 import type { FoodTodayData } from '../hooks/useFoodToday'
 
 export function FoodLogList({ data }: { data: FoodTodayData | undefined }) {
@@ -22,9 +23,9 @@ export function FoodLogList({ data }: { data: FoodTodayData | undefined }) {
             <button
               type="button"
               onClick={() => deleteFoodLog(log.id)}
-              className="text-xs text-(--color-text-muted) underline"
+              className="flex items-center gap-1 text-xs text-(--color-text-muted) underline"
             >
-              undo
+              <Undo2 size={12} /> undo
             </button>
           </GlassCard>
         )

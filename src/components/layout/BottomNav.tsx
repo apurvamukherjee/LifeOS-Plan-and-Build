@@ -1,11 +1,19 @@
 import clsx from 'clsx'
+import { CheckSquare, Droplet, Home, Pill, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
-const TABS = [
-  { to: '/', label: 'Home', icon: '🏠', end: true },
-  { to: '/water', label: 'Water', icon: '💧', end: false },
-  { to: '/supplements', label: 'Supplements', icon: '💊', end: false },
-  { to: '/tasks', label: 'Tasks', icon: '✅', end: false },
+interface Tab {
+  to: string
+  label: string
+  icon: LucideIcon
+  end: boolean
+}
+
+const TABS: Tab[] = [
+  { to: '/', label: 'Home', icon: Home, end: true },
+  { to: '/water', label: 'Water', icon: Droplet, end: false },
+  { to: '/supplements', label: 'Supplements', icon: Pill, end: false },
+  { to: '/tasks', label: 'Tasks', icon: CheckSquare, end: false },
 ]
 
 export function BottomNav() {
@@ -23,7 +31,7 @@ export function BottomNav() {
             )
           }
         >
-          <span className="text-lg leading-none">{tab.icon}</span>
+          <tab.icon size={20} strokeWidth={2} />
           {tab.label}
         </NavLink>
       ))}

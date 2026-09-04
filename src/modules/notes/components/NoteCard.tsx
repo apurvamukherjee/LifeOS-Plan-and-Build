@@ -1,6 +1,7 @@
 import { GlassCard } from '@/components/ui/GlassCard'
 import { deleteNote, updateNote } from '@/db/repositories/notesRepo'
 import type { Note } from '@/db/schema'
+import { Pin, PinOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 const COLOR_OPTIONS: { name: string; value: string | null }[] = [
@@ -33,10 +34,10 @@ export function NoteCard({ note }: { note: Note }) {
         <button
           type="button"
           onClick={() => updateNote(note.id, { isPinned: !note.isPinned })}
-          className="shrink-0 text-sm"
+          className={note.isPinned ? 'shrink-0 text-action' : 'shrink-0 text-(--color-text-muted)'}
           aria-label={note.isPinned ? 'Unpin' : 'Pin'}
         >
-          {note.isPinned ? '📌' : '📍'}
+          {note.isPinned ? <Pin size={16} fill="currentColor" /> : <PinOff size={16} />}
         </button>
       </div>
       <input
@@ -62,9 +63,9 @@ export function NoteCard({ note }: { note: Note }) {
         <button
           type="button"
           onClick={() => deleteNote(note.id)}
-          className="text-xs text-(--color-text-muted) underline"
+          className="flex items-center gap-1 text-xs text-(--color-text-muted) underline"
         >
-          delete
+          <Trash2 size={12} /> delete
         </button>
       </div>
     </GlassCard>

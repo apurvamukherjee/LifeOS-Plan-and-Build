@@ -4,6 +4,7 @@ import { useStreak } from '@/hooks/useStreak'
 import { undoWaterLog } from '@/modules/water/actions'
 import { WaterQuickAdd } from '@/modules/water/components/WaterQuickAdd'
 import { useWaterToday } from '@/modules/water/hooks/useWaterToday'
+import { Flame, Undo2 } from 'lucide-react'
 
 export function WaterPage() {
   const today = useWaterToday()
@@ -23,8 +24,8 @@ export function WaterPage() {
           </div>
         </ProgressRing>
         {streak && streak.currentStreak > 0 && (
-          <span className="text-sm text-streak">
-            🔥 {streak.currentStreak}-day streak · best {streak.longestStreak}
+          <span className="flex items-center gap-1 text-sm text-streak">
+            <Flame size={16} /> {streak.currentStreak}-day streak · best {streak.longestStreak}
           </span>
         )}
       </GlassCard>
@@ -47,9 +48,9 @@ export function WaterPage() {
                 <button
                   type="button"
                   onClick={() => undoWaterLog(log.id)}
-                  className="text-xs text-(--color-text-muted) underline"
+                  className="flex items-center gap-1 text-xs text-(--color-text-muted) underline"
                 >
-                  undo
+                  <Undo2 size={12} /> undo
                 </button>
               </li>
             ))}

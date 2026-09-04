@@ -21,8 +21,35 @@
   --color-finance: #d8c4a7;
 
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
+    'Satoshi', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+/* Self-hosted (not loaded from Fontshare's CDN) to keep font loading fully offline-first — see
+ * public/fonts/LICENSE.md for the license basis. Only the weights actually used are included. */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  /* Also serves Tailwind's font-semibold (600): no static 600 cut exists for Satoshi, and the
+   * browser's standard font-weight matching correctly falls back to the nearest heavier defined
+   * weight (700) rather than synthesizing a faux-bold. */
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 @layer base {

@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/Button'
+import { AddToggleButton } from '@/components/ui/AddToggleButton'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { AddMedicationForm } from '@/modules/medication/components/AddMedicationForm'
 import { MedicationListItem } from '@/modules/medication/components/MedicationListItem'
@@ -15,9 +15,7 @@ export function MedicationPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Medication</h1>
-        <Button variant="glass" onClick={() => setShowAddForm((prev) => !prev)}>
-          {showAddForm ? 'Close' : '+ Add'}
-        </Button>
+        <AddToggleButton isOpen={showAddForm} onToggle={() => setShowAddForm((prev) => !prev)} />
       </div>
 
       <GlassCard className="text-xs text-(--color-text-secondary)">

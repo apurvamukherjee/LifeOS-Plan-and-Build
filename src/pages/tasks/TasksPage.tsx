@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/Button'
+import { AddToggleButton } from '@/components/ui/AddToggleButton'
 import { AddTaskForm } from '@/modules/tasks/components/AddTaskForm'
 import { TaskListItem } from '@/modules/tasks/components/TaskListItem'
 import { useTasks } from '@/modules/tasks/hooks/useTasks'
@@ -15,9 +15,7 @@ export function TasksPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Tasks</h1>
-        <Button variant="glass" onClick={() => setShowAddForm((prev) => !prev)}>
-          {showAddForm ? 'Close' : '+ Add'}
-        </Button>
+        <AddToggleButton isOpen={showAddForm} onToggle={() => setShowAddForm((prev) => !prev)} />
       </div>
 
       {showAddForm && <AddTaskForm onAdded={() => setShowAddForm(false)} />}
