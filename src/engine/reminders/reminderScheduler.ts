@@ -1,13 +1,17 @@
-import { listActiveReminders, markReminderFired } from '@/db/repositories/remindersRepo'
+import { listActiveReminders, markReminderFired, rescheduleReminder } from '@/db/repositories/remindersRepo'
 import type { Reminder } from '@/db/schema'
+import { bodyForEntityType, isNativePlatform } from './nativeNotifications'
+import { nextOccurrenceOf } from './scheduling'
 
 const CHECK_INTERVAL_MS = 30_000
 
 /**
- * In-app reminders only, per docs/ARCHITECTURE.md: this only fires while the tab is open and
- * foregrounded (a poll gated on Page Visibility + the Notification API). It is NOT a substitute
- * for real Web Push — see src/engine/reminders/pushSubscription.ts for that (currently
- * client-side-only scaffolding, no server exists yet to send pushes).
+ * In-app-only fallback, per docs/ARCHITECTURE.md: fires only while the tab is open and
+ * foregrounded (a poll gated on Page Visibility + the Notification API). On native platforms
+ * (Capacitor Android/iOS) this doesn't even start — engine/reminders/nativeNotifications.ts
+ * schedules a real OS-level notification instead, which is what actually fires reliably with
+ * the app closed. This poll exists for the plain-browser/PWA case where no native scheduler is
+ * available.
  */
 async function checkDueReminders(): Promise<void> {
   if (document.visibilityState !== 'visible') return
@@ -18,7 +22,16 @@ async function checkDueReminders(): Promise<void> {
   for (const reminder of reminders) {
     if (new Date(reminder.scheduledAt).getTime() <= now) {
       fireReminder(reminder)
-      await markReminderFired(reminder.id)
+
+      if (reminder.repeatRule) {
+        // Advance to the next occurrence rather than leaving it permanently 'fired', so a daily
+        // reminder actually recurs for users on the plain-browser fallback path.
+        const at = new Date(reminder.scheduledAt)
+        const next = nextOccurrenceOf(at.getHours(), at.getMinutes())
+        await rescheduleReminder(reminder.id, next.toISOString())
+      } else {
+        await markReminderFired(reminder.id)
+      }
     }
   }
 }
@@ -26,32 +39,16 @@ async function checkDueReminders(): Promise<void> {
 function fireReminder(reminder: Reminder): void {
   if (Notification.permission !== 'granted') return
   new Notification('LifeOS reminder', {
-    body: reminderBody(reminder),
+    body: bodyForEntityType(reminder.entityType),
     tag: reminder.id,
   })
 }
 
-function reminderBody(reminder: Reminder): string {
-  switch (reminder.entityType) {
-    case 'water':
-      return "It's time to drink some water."
-    case 'supplement':
-      return 'A supplement dose is due.'
-    case 'task':
-      return 'A task is due.'
-    case 'medication':
-      return 'A medication dose is due.'
-    case 'gym':
-      return 'It might be time for a workout.'
-    case 'food':
-      return "Don't forget to log a meal."
-    case 'note':
-      return 'A note reminder is due.'
-  }
-}
-
-/** Starts the foreground poll. Returns a cleanup function. */
+/** Starts the in-app foreground poll — a no-op returning a harmless cleanup on native platforms,
+ * since scheduleNativeReminder (called wherever reminders are set) supersedes it there. */
 export function startReminderScheduler(): () => void {
+  if (isNativePlatform()) return () => {}
+
   void checkDueReminders()
   const intervalHandle = setInterval(checkDueReminders, CHECK_INTERVAL_MS)
   document.addEventListener('visibilitychange', checkDueReminders)

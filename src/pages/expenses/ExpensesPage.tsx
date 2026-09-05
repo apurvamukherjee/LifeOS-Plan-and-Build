@@ -1,6 +1,7 @@
 import { AddExpenseForm } from '@/modules/expenses/components/AddExpenseForm'
 import { ExpenseListItem } from '@/modules/expenses/components/ExpenseListItem'
 import { MonthlyOverview } from '@/modules/expenses/components/MonthlyOverview'
+import { RecurringBillsSection } from '@/modules/expenses/components/RecurringBillsSection'
 import { SetBudgetForm } from '@/modules/expenses/components/SetBudgetForm'
 import { useExpenses } from '@/modules/expenses/hooks/useExpenses'
 
@@ -14,6 +15,7 @@ export function ExpensesPage() {
       <MonthlyOverview />
       <AddExpenseForm />
       <SetBudgetForm />
+      <RecurringBillsSection />
 
       <div className="flex flex-col gap-2">
         {expenses?.length ? (

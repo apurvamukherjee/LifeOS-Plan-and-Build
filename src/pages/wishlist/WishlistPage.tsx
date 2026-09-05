@@ -24,12 +24,12 @@ export function WishlistPage() {
 
       <GlassCard className="flex flex-col gap-2">
         <span className="text-sm text-(--color-text-secondary)">Estimated total</span>
-        <span className="text-3xl font-semibold text-finance">${total.toFixed(2)}</span>
+        <span className="text-3xl font-semibold text-finance">₹{total.toFixed(2)}</span>
         {subtotals.length > 0 && (
           <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1 text-xs text-(--color-text-secondary)">
             {subtotals.map((s) => (
               <span key={s.category}>
-                {s.category}: ${s.total.toFixed(2)}
+                {s.category}: ₹{s.total.toFixed(2)}
               </span>
             ))}
           </div>

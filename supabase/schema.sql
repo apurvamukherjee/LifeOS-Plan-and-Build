@@ -317,8 +317,12 @@ create table if not exists expenses (
   created_at timestamptz not null,
   updated_at timestamptz not null,
   deleted boolean not null default false,
-  server_updated_at timestamptz not null default now()
+  server_updated_at timestamptz not null default now(),
+  recurring_bill_id uuid
 );
+-- Added after the initial table for recurring-bill auto-generation; ADD COLUMN IF NOT EXISTS so
+-- this stays safe to re-run against an already-existing expenses table from before this field.
+alter table expenses add column if not exists recurring_bill_id uuid;
 drop trigger if exists trg_expenses_server_updated_at on expenses;
 create trigger trg_expenses_server_updated_at
   before insert or update on expenses
@@ -481,8 +485,12 @@ create table if not exists workouts (
   created_at timestamptz not null,
   updated_at timestamptz not null,
   deleted boolean not null default false,
-  server_updated_at timestamptz not null default now()
+  server_updated_at timestamptz not null default now(),
+  template_id uuid
 );
+-- Added after the initial table for "start from template"; safe to re-run against an
+-- already-existing workouts table from before this field.
+alter table workouts add column if not exists template_id uuid;
 drop trigger if exists trg_workouts_server_updated_at on workouts;
 create trigger trg_workouts_server_updated_at
   before insert or update on workouts

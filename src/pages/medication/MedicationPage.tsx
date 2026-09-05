@@ -1,5 +1,6 @@
 import { AddToggleButton } from '@/components/ui/AddToggleButton'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { isNativePlatform } from '@/engine/reminders/nativeNotifications'
 import { AddMedicationForm } from '@/modules/medication/components/AddMedicationForm'
 import { MedicationListItem } from '@/modules/medication/components/MedicationListItem'
 import { useMedicationLogsToday } from '@/modules/medication/hooks/useMedicationLogsToday'
@@ -19,8 +20,9 @@ export function MedicationPage() {
       </div>
 
       <GlassCard className="text-xs text-(--color-text-secondary)">
-        Reminders here are in-app only — they fire while LifeOS is open, not in the background.
-        Don't rely on them alone for time-sensitive doses.
+        {isNativePlatform()
+          ? 'Reminders here fire as real notifications, even while LifeOS is closed.'
+          : "Reminders here are in-app only — they fire while LifeOS is open, not in the background. Don't rely on them alone for time-sensitive doses."}
       </GlassCard>
 
       {showAddForm && <AddMedicationForm onAdded={() => setShowAddForm(false)} />}

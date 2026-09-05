@@ -1,12 +1,13 @@
 import { Button } from '@/components/ui/Button'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { createExercise } from '@/db/repositories/gymRepo'
+import { createExercise, createWorkoutTemplate } from '@/db/repositories/gymRepo'
 import type { Workout } from '@/db/schema'
-import { Trophy } from 'lucide-react'
+import { Save, Trophy } from 'lucide-react'
 import { useState } from 'react'
 import { finishWorkout, logSet } from '../actions'
-import { useAllSets, useExercises, useWorkoutSets } from '../hooks/useGym'
+import { useAllSets, useExercises, useWorkoutSets, useWorkoutTemplate } from '../hooks/useGym'
 import { getMostRecentSet, isNewPersonalRecord } from '../personalRecords'
+import { resolveTemplateExercises } from '../templates'
 import { PlateCalculator } from './PlateCalculator'
 import { RestTimer } from './RestTimer'
 
@@ -17,6 +18,7 @@ export function ActiveWorkoutSession({ workout }: { workout: Workout }) {
   const exercises = useExercises()
   const sets = useWorkoutSets(workout.id)
   const allSets = useAllSets()
+  const template = useWorkoutTemplate(workout.templateId)
 
   const [selectedExerciseId, setSelectedExerciseId] = useState('')
   const [newExerciseName, setNewExerciseName] = useState('')
@@ -24,11 +26,16 @@ export function ActiveWorkoutSession({ workout }: { workout: Workout }) {
   const [weight, setWeight] = useState('')
   const [rpe, setRpe] = useState('')
   const [prCelebration, setPrCelebration] = useState<string | null>(null)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [templateName, setTemplateName] = useState('')
 
   const exercisesById = new Map((exercises ?? []).map((exercise) => [exercise.id, exercise]))
   const previous = selectedExerciseId
     ? getMostRecentSet(allSets ?? [], selectedExerciseId, workout.id)
     : undefined
+  const templateExercises = template
+    ? resolveTemplateExercises(template.exerciseOrder, exercises ?? [])
+    : []
 
   async function handleAddExercise() {
     if (!newExerciseName.trim()) return
@@ -63,6 +70,14 @@ export function ActiveWorkoutSession({ workout }: { workout: Workout }) {
     setRpe('')
   }
 
+  async function handleSaveAsTemplate() {
+    if (!templateName.trim() || !sets?.length) return
+    const exerciseOrder = [...new Set(sets.map((set) => set.exerciseId))]
+    await createWorkoutTemplate({ name: templateName.trim(), exerciseOrder })
+    setTemplateName('')
+    setSavingTemplate(false)
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <GlassCard className="flex items-center justify-between">
@@ -75,6 +90,24 @@ export function ActiveWorkoutSession({ workout }: { workout: Workout }) {
       <RestTimer />
 
       <GlassCard className="flex flex-col gap-2">
+        {templateExercises.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {templateExercises.map((exercise) => (
+              <button
+                key={exercise.id}
+                type="button"
+                onClick={() => setSelectedExerciseId(exercise.id)}
+                className={
+                  selectedExerciseId === exercise.id
+                    ? 'glass rounded-full px-3 py-1.5 text-xs text-action'
+                    : 'glass rounded-full px-3 py-1.5 text-xs text-(--color-text-secondary)'
+                }
+              >
+                {exercise.name}
+              </button>
+            ))}
+          </div>
+        )}
         <select
           className={inputClass}
           value={selectedExerciseId}
@@ -139,17 +172,42 @@ export function ActiveWorkoutSession({ workout }: { workout: Workout }) {
       </GlassCard>
 
       {sets && sets.length > 0 && (
-        <div className="flex flex-col gap-1">
-          {sets.map((set) => (
-            <GlassCard key={set.id} className="flex items-center justify-between text-sm">
-              <span>{exercisesById.get(set.exerciseId)?.name ?? '—'}</span>
-              <span>
-                {set.weightKg}kg × {set.reps}
-                {set.rpe !== null && ` @RPE${set.rpe}`}
-              </span>
-            </GlassCard>
-          ))}
-        </div>
+        <>
+          <div className="flex flex-col gap-1">
+            {sets.map((set) => (
+              <GlassCard key={set.id} className="flex items-center justify-between text-sm">
+                <span>{exercisesById.get(set.exerciseId)?.name ?? '—'}</span>
+                <span>
+                  {set.weightKg}kg × {set.reps}
+                  {set.rpe !== null && ` @RPE${set.rpe}`}
+                </span>
+              </GlassCard>
+            ))}
+          </div>
+
+          {!template &&
+            (savingTemplate ? (
+              <GlassCard className="flex items-center gap-2">
+                <input
+                  className={inputClass + ' flex-1'}
+                  placeholder="Template name"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                />
+                <Button variant="primary" onClick={handleSaveAsTemplate}>
+                  Save
+                </Button>
+              </GlassCard>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setSavingTemplate(true)}
+                className="flex items-center justify-center gap-1 text-xs text-(--color-text-muted) underline"
+              >
+                <Save size={12} /> save today's exercises as a template
+              </button>
+            ))}
+        </>
       )}
 
       <PlateCalculator />

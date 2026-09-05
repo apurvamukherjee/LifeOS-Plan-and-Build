@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button'
 import { startWorkout } from '@/db/repositories/gymRepo'
 import { ActiveWorkoutSession } from '@/modules/gym/components/ActiveWorkoutSession'
+import { TemplatePicker } from '@/modules/gym/components/TemplatePicker'
 import { WorkoutHistoryList } from '@/modules/gym/components/WorkoutHistoryList'
 import { useActiveWorkout } from '@/modules/gym/hooks/useGym'
 import { useState } from 'react'
@@ -28,6 +29,7 @@ export function GymPage() {
               Start workout
             </Button>
           </div>
+          <TemplatePicker />
           <WorkoutHistoryList />
         </>
       )}

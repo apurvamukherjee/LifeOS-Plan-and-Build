@@ -1,61 +1,74 @@
+<div align="center">
+
 # LifeOS
 
-An offline-first, glassmorphic lifestyle-tracker PWA. All 9 modules from the original spec are
-built: **Water, Supplements, Tasks, Medication, Food, Gym, Expenses, Wishlist, Notes** — sharing
-one logging/streak/reminder engine, a weekly cross-module coaching summary on Home, and a
-particle-burst celebration on goal completion. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for
-what's left in Stage 3 and why a few items there are deliberately not built.
+**Nine trackers. One app. Zero clutter.**
 
-## Getting started
+Water, supplements, tasks, medication, food, gym, money, wishlist, and notes — all living behind one calm, glass-smooth interface instead of nine different apps fighting for your attention.
 
-```bash
-npm install
-npm run dev
-```
+<img src="docs/screenshots/home.png" alt="LifeOS home screen" width="360" />
 
-Open the printed local URL. No account or configuration is required — everything runs fully
-offline against local IndexedDB storage. The bottom nav covers the 4 daily-habit trackers (Home,
-Water, Supplements, Tasks); the other 5 modules are reachable from the cards on Home.
+</div>
 
-## Scripts
+## Why LifeOS
 
-- `npm run dev` — start the dev server
-- `npm run build` — type-check and build for production (`dist/`)
-- `npm run preview` — serve the production build locally (useful for testing offline/PWA behavior)
-- `npm run test` — run the unit test suite once
-- `npm run test:watch` — run tests in watch mode
-- `npm run lint` — run oxlint
+Most people don't have a tracking problem — they have a *fragmentation* problem. A water app here, a habit tracker there, a separate workout log, a budgeting app you opened twice. Every one of them wants to be the center of your life, and none of them talk to each other.
 
-In dev mode, run `__lifeosSeed()` in the browser devtools console to populate sample data
-(see `src/dev/seed.ts`).
+LifeOS takes the opposite approach: **one home screen, one streak system, one design language**, covering everything you actually check on a daily basis. Open it once in the morning and see your whole day at a glance — not nine times.
 
-## Optional: cloud sync via Supabase
+## Everything you're already trying to track
 
-The app is local-first — Dexie/IndexedDB is the only thing the UI ever reads from, and it works
-with zero configuration. If you want your data to sync/back up across devices, follow
-[`supabase/README.md`](supabase/README.md) to create a free Supabase project, apply
-`supabase/schema.sql`, and set `.env.local` from `.env.example`. Without that, the app runs in
-pure local-only mode and a sign-in screen never even appears.
+| | |
+|---|---|
+| 💧 **Water** | One-tap logging with a personal daily goal and a live progress ring |
+| 💊 **Supplements** | Dosing schedules, loading-phase tracking, and a live saturation percentage for things like creatine |
+| ✅ **Tasks** | Daily, weekly, and monthly recurring to-dos that actually reset themselves |
+| 💊 **Medication** | Gentle adherence tracking that never guilt-trips you for a missed dose |
+| 🍽️ **Food** | Fast calorie logging plus one-tap re-logging of your regular meals |
+| 🏋️ **Gym** | Full workout sessions — set-by-set logging, a rest timer, a plate calculator, and automatic personal-record detection |
+| 💵 **Expenses** | Dead-simple money in / money out tracking with monthly budgets by category |
+| 🛍️ **Wishlist** | A running total of everything you want, scored by how much you actually need it |
+| 📝 **Notes** | Instant capture for whatever's in your head right now |
 
-## Known limitation: reminders
+## Built to feel good, not stressful
 
-Reminders are **in-app only** — they fire via the Notification API while the tab is open and
-foregrounded. Web Push (for reminders while the app/tab is closed) is scaffolded on the client
-(`src/engine/reminders/pushSubscription.ts`, `public/push-handler.js`) but not wired to a
-server, since no backend exists yet to send push payloads. This is a deliberate, honest scoping
-decision — see `docs/ARCHITECTURE.md` ("Reminder service"). It matters most for the Medication
-module (its page carries an in-app disclaimer about this): don't treat in-app-only reminders as
-reliable enough for anything safety-relevant without either a server-side Web Push sender or a
-Capacitor native wrapper (see `docs/ROADMAP.md`, Stage 3).
+Streaks are everywhere in this app — but they're forgiving. Miss a day and a streak "freeze" quietly covers you instead of resetting everything to zero. Nothing is styled in alarm red for a missed goal; the whole app is built around the idea that consistency beats perfection.
 
-## Documentation
+There's also a small companion that reflects your week back at you — cheerful when you've been consistent, quietly resting when you haven't touched the app in a while, but never disappointed in you. It's not there to judge, it's there to notice.
 
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Stage 1/2/3 plan and module status
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — technical design (streak engine, sync engine,
-  reminder service, glass design system)
-- [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) / [`docs/SYNC_DESIGN.md`](docs/SYNC_DESIGN.md) —
-  schema and sync algorithm detail
-- [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md) — dated log of what's actually been built
-- [`docs/modules/`](docs/modules) — the original per-module specs (all now built; kept as
-  design-rationale reference)
-- [`docs/ORIGINAL_SPEC.md`](docs/ORIGINAL_SPEC.md) — the full original product research
+Every week, LifeOS also puts together a short, honest summary of how things went — your strongest area, and the one that could use a little more attention — instead of burying you in charts.
+
+## A few of the details
+
+<div align="center">
+<img src="docs/screenshots/celebration.png" alt="Hitting a daily goal" width="280" />&nbsp;&nbsp;
+<img src="docs/screenshots/gym.png" alt="Workout session with a personal record" width="280" />&nbsp;&nbsp;
+<img src="docs/screenshots/wishlist.png" alt="Wishlist with a running total" width="280" />
+</div>
+
+<br />
+
+Hit a goal for the day and the app celebrates with you — small, quick, and never in the way. Log a heavier set than ever before in the gym module and it notices immediately. Add something to your wishlist and it keeps an honest running total so "I'll just get it" decisions come with a real number attached.
+
+## Works everywhere, even with no signal
+
+LifeOS installs straight to your home screen like a native app and works completely offline — your data lives on your device first. Turn on sync and it quietly keeps a backup in the cloud and follows you across devices, but nothing ever depends on being connected.
+
+<div align="center">
+<img src="docs/screenshots/android.png" alt="LifeOS running as a native Android app" width="300" />
+
+*Also available as a native Android app*
+
+</div>
+
+## Design
+
+Deep indigo, frosted glass surfaces, and a restrained color system where every accent color means something specific — blue for water, green for consistency, coral for action, lavender for reflection. Nothing is decorative; every visual choice is there to make the right information easier to read at a glance.
+
+---
+
+<div align="center">
+
+*A calmer way to keep track of everything.*
+
+</div>

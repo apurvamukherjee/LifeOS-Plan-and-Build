@@ -47,7 +47,7 @@ export function AddWishlistItemForm({ onAdded }: { onAdded?: () => void }) {
         <input
           className={inputClass}
           type="number"
-          placeholder="Price"
+          placeholder="Price (₹)"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
         />

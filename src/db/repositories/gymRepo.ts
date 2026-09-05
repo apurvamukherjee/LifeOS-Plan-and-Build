@@ -18,12 +18,13 @@ export async function getActiveWorkout(): Promise<Workout | undefined> {
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0]
 }
 
-export async function startWorkout(name: string): Promise<Workout> {
+export async function startWorkout(name: string, templateId: string | null = null): Promise<Workout> {
   return insertRecord<Workout>(db.workouts, {
     name,
     notes: '',
     startedAt: new Date().toISOString(),
     completedAt: null,
+    templateId,
   })
 }
 
@@ -61,8 +62,16 @@ export async function listWorkoutTemplates(): Promise<WorkoutTemplate[]> {
   return all.filter((template) => !template.deleted)
 }
 
+export async function getWorkoutTemplate(id: string): Promise<WorkoutTemplate | undefined> {
+  return db.workoutTemplates.get(id)
+}
+
 export async function createWorkoutTemplate(
   fields: Omit<WorkoutTemplate, keyof BaseRecord>,
 ): Promise<WorkoutTemplate> {
   return insertRecord<WorkoutTemplate>(db.workoutTemplates, fields)
+}
+
+export async function deleteWorkoutTemplate(id: string): Promise<void> {
+  return softDeleteRecord<WorkoutTemplate>(db.workoutTemplates, id)
 }

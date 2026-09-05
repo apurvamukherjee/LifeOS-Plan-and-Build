@@ -19,6 +19,7 @@ function makeExpense(overrides: Partial<Expense>): Expense {
     category: 'food',
     note: '',
     occurredAt: '2026-01-15T12:00:00.000Z',
+    recurringBillId: null,
     ...overrides,
   }
 }

@@ -344,3 +344,210 @@ user chose "scaffold Android only."
 Stage 3 is now complete: every item in the roadmap table is either built or has a definitive,
 documented reason it isn't (hard platform constraint for widgets' remaining gap, Mac-only
 tooling for iOS).
+
+## 2026-09-05 — Stage 4: icon system, Satoshi typography, public README, .gitignore
+
+User asked to replace every emoji with real icons from an icon pack, apply a "cooler" font
+(Satoshi, or a good alternative) app-wide, write a portfolio-style public README with
+screenshots (explicitly no mention of code/implementation/AI), and harden `.gitignore`.
+
+- **Icons**: installed `lucide-react`. Found every emoji-as-icon usage via a Unicode-range grep
+  across `src/` (not a manual eyeball search) to make sure nothing was missed: bottom nav
+  (🏠💧💊✅), `StreakBadge` (🔥⚠), `CelebrationOverlay`'s particle burst (🎉✨🔥💪 →
+  `PartyPopper`/`Sparkles`/`Flame`/`Dumbbell`, each tinted with an existing brand accent color),
+  the water page's inline streak flame, the note pin toggle (📌📍 → `Pin`/`PinOff`), the gym PR
+  celebration (🎉 → `Trophy`), "Taken" checkmarks in Supplements/Medication (→ `Check`), the
+  recurring-task marker (↻ → `Repeat`), and the error boundary's crash face (😵 → `Frown`).
+  Extended slightly beyond the literal ask for consistency: every page's "+ Add" button used a
+  literal `+` character as a pseudo-icon — replaced with a real `Plus`/`X` icon via a new shared
+  `AddToggleButton` component (the exact "+ Add / Close" toggle was duplicated identically across
+  4 pages, so this was also a small dedup). Plain-text "remove"/"undo"/"delete" action links
+  across 7 list-item components picked up matching `Trash2`/`Undo2` icons for consistency with
+  the now-iconified primary actions sitting right next to them.
+  - Caught and fixed a real mistake while doing this: initially used a Tailwind `text-base`
+    utility class hoping it would apply the app's `--color-base` (near-black) token as a text
+    color for a checkmark icon rendered on a colored background. It doesn't reliably — Tailwind
+    v4 also defines a built-in `--text-base` font-size token (1rem) in a different theme
+    namespace, and the two collide on the same class name. Fixed with an explicit
+    `style={{ color: 'var(--color-base)' }}` instead of relying on the ambiguous utility class.
+- **Typography**: fetched Satoshi directly from Fontshare's CDN (`api.fontshare.com/v2/css`) and
+  self-hosted the woff2 files under `public/fonts/` rather than linking Fontshare's CDN at
+  runtime — an external font host is exactly the kind of dependency this offline-first PWA is
+  built to avoid. Verified via Fontshare's own API (`license_type: itf_ffl`) that the license
+  covers free commercial self-hosted use with no attribution required. Only fetched/kept the
+  weights actually used in the app (400, 500, 700 — checked via a grep for every
+  `font-{weight}` Tailwind utility in use first, rather than guessing); confirmed Satoshi has no
+  static 600/SemiBold cut, but the browser's standard font-weight matching correctly substitutes
+  700 for Tailwind's `font-semibold` without faux-bold synthesis, so nothing extra was needed.
+  Wired in via the existing `--font-sans` design token, so no per-component changes were needed
+  for it to apply everywhere. Verified in a live browser via `document.fonts.check()` that both
+  weights actually loaded and applied, not just that the CSS was present.
+- **README**: full rewrite as a product showcase rather than a technical readme — hero
+  screenshot, a "why this app exists" pitch, a full module feature table, a design-philosophy
+  section (shame-free streaks, the companion, the color system), and a platforms section
+  (offline PWA + native Android). Deliberately contains no mention of the tech stack, code, or
+  how the app was built. Backed by 5 freshly-captured screenshots (not reused stale ones) in the
+  new `docs/screenshots/`: a richly-seeded home dashboard (all 9 modules populated via real UI
+  interactions, not fixture data), a goal-completion celebration mid-animation, an active gym
+  session with a PR firing, the wishlist running total, and the app running natively on a
+  rebuilt-and-reinstalled Android APK (confirming the icon/font work applies there too, not just
+  on the web).
+- **`.gitignore`**: added explicit `.env`/`.env.local`/`.env.*.local` patterns (previously only
+  covered by a blanket `*.local`), `*.tsbuildinfo`, and `Thumbs.db`; reorganized with clearer
+  section comments.
+- **Process note**: partway through this work the user began committing and pushing changes
+  themselves directly (outside this session's tool calls) — a remote (`origin`, pointing at their
+  own GitHub repo) appeared, the default branch was renamed `master` → `main`, and a commit
+  capturing the icon/font source changes landed on it. Per explicit instruction, no `git commit`
+  or `git push` has been run from within this session since — the README, `.gitignore`, and
+  `docs/screenshots/` from this entry were left as uncommitted working-tree changes for the user
+  to review and commit on their own.
+- **Verification**: `npx tsc -b` clean, full Unicode-range re-grep confirmed zero emoji remain in
+  `src/`, `npx vitest run` — 87/87 tests still passing (no engine/logic code was touched this
+  pass). Full browser click-through across Home and 5 module pages confirmed the new icons/font
+  render correctly with zero console errors.
+
+## 2026-09-05 — Stage 4 (continued): native notifications, recurring bills, workout templates
+
+User asked to close out the three remaining named gaps from the prior session's summary (native
+notifications, start-workout-from-template, recurring-bill auto-generation) plus lazier Home
+dashboard cards, then generate an installable APK.
+
+- **Home dashboard code-splitting**: all 9 `*DashboardCard` imports in `pages/Home.tsx` converted
+  to `React.lazy` behind individual `Suspense` fallbacks (a pulsing glass placeholder), so Home's
+  landing bundle no longer eagerly pulls in every module's card-specific code.
+- **Recurring bill auto-generation** (`modules/expenses/recurringBills.ts`): pure
+  `isBillDueByLocalDate` (clamps `dayOfMonth` to the actual last day of shorter months) and
+  `hasBeenGeneratedForMonth`; `generateDueRecurringBills` runs from the existing foreground-effects
+  hook. A real bug surfaced by React 18 StrictMode's double-invoked effects in dev: two
+  near-simultaneous calls both saw "not generated yet" and both wrote an expense (observed as
+  double the correct amount in a live screenshot) — fixed with a module-level in-flight guard,
+  the same pattern already used by the sync engine. Re-verified after the fix: correct single
+  amount.
+- **Start workout from template** (`modules/gym/templates.ts`, `ActiveWorkoutSession.tsx`,
+  new `TemplatePicker.tsx`): `resolveTemplateExercises` maps a template's saved exercise-id order
+  to live `Exercise` records, silently dropping any that no longer resolve. Starting from a
+  template surfaces its exercises as clickable chips; finishing an ad-hoc (non-template) workout
+  with at least one set offers "save as template." Full save → start → chips-appear round trip
+  verified live in-browser.
+- **Native local notifications** (`@capacitor/local-notifications`, `engine/reminders/
+  nativeNotifications.ts`, `reminderActions.ts`): `setDailyReminder`/`removeDailyReminder` now
+  write the Dexie reminder row and register a real OS notification together; the existing
+  in-app foreground poll (`reminderScheduler.ts`) now no-ops entirely on native platforms rather
+  than running redundantly alongside the OS notification. Added a `ReminderToggle` control (bell
+  icon + time, or a time picker) to Medication and Task rows.
+  - **JDK/Gradle rebuild snag**: adding the plugin and re-running `cap sync` forced a fresh Gradle
+    resolution that failed under the JDK 25 install used for the previous Capacitor build —
+    `Unsupported class file major version 69`. Root cause: Gradle 8.14.3's own Groovy engine can
+    only be *hosted on* JDKs up to Java 24, a separate constraint from what it can *compile
+    against* (Java 21, which is what `capacitor-android` targets). Fixed by building with Android
+    Studio's own bundled JDK (`C:\Program Files\Android\Android Studio\jbr`, a JBR-flavored
+    OpenJDK 21) instead of the newest JDK on the machine — new enough to compile the target, old
+    enough for Gradle to run on. Full story recorded in `docs/CAPACITOR.md` so it doesn't need
+    re-discovering.
+  - **End-to-end verification on a real emulator, not just a compile check**: drove the actual
+    native app via a raw CDP WebSocket client (Playwright's `connectOverCDP` doesn't work against
+    Android WebView — its devtools implementation doesn't support browser-context management) to
+    add a medication and set a reminder through the real UI. First attempt appeared to hang, which
+    turned out to be a real (if expected) system permission dialog — "Allow LifeOS to send you
+    notifications?" — blocking the JS promise until answered; granted it via `adb shell input
+    tap`. Second attempt scheduled the OS alarm but it never fired; `adb shell dumpsys alarm`
+    showed nothing at all for the package, which traced to a *second*, separate Android 12+
+    permission gate — "Alarms & reminders" (`SCHEDULE_EXACT_ALARM`) — that can't be requested via
+    a runtime dialog at all; `@capacitor/local-notifications` itself detects this and deep-links
+    to that system Settings screen the first time it's needed. Granted it once via the emulator's
+    Settings UI; every reminder set after that point worked correctly. After granting both
+    permissions, force-stopping the app to simulate "closed" turned out to be the wrong test —
+    `am force-stop` puts an app into a system "stopped" state where Android intentionally
+    suppresses its scheduled alarms until the user manually relaunches it (confirmed via `dumpsys
+    package` showing `stopped=true` and the previously-scheduled alarm gone from `dumpsys alarm`).
+    Redone correctly (just backgrounding via the Home button, `stopped=false`): `dumpsys alarm`
+    showed a real `RTC_WAKEUP` entry (`TimedNotificationPublisher`) at the exact scheduled time,
+    and at that time a real Android notification — "LifeOS reminder" / "A medication dose is
+    due." — appeared in the system notification shade with the app fully backgrounded, confirmed
+    both via `dumpsys notification` and a screenshot of the expanded shade. This is the concrete,
+    verified fix for the reminder-reliability gap the whole Capacitor wrapper was originally
+    motivated by.
+  - Updated the in-app Medication disclaimer to be platform-aware (`isNativePlatform()`) — it
+    still correctly warns "in-app only" in the browser, but now says reminders fire even when
+    LifeOS is closed on native, since that stale copy would otherwise now be actively wrong.
+  - All of the above (permission-dialog handling, exact-alarm Settings redirect, force-stop vs.
+    background distinction) documented in `docs/CAPACITOR.md` so this doesn't need re-discovering.
+- **Wishlist currency**: switched from `$` to `₹` across the wishlist row, dashboard card, page
+  total/subtotals, and the price input placeholder — the app targets India-only usage.
+- **Final verification**: `npx tsc -b` clean, `npx vitest run` — 18 files, 101/101 tests passing.
+  Rebuilt the web bundle and Android APK with all of the above; confirmed on a clean
+  uninstall/reinstall that the rebuilt APK actually reflects both the new Wishlist ₹ formatting
+  and the platform-aware Medication copy (a stale-service-worker artifact from repeatedly
+  reinstalling the same content-hash-changing build during testing briefly showed the app's
+  existing chunk-load error boundary instead — resolved by a clean install, not a real bug).
+  Debug APK copied to `~/Desktop/LifeOS-APK/LifeOS-debug.apk` for installation.
+
+### Known deferred items (not blocking, noted for later)
+
+- No in-app messaging yet for what to do if a user declines either the notification permission or
+  the exact-alarm Settings toggle — the reminder row is still created either way, it just won't
+  visibly fire.
+- Cloud sync still requires the user to create their own Supabase project — unchanged, by design
+  (see Stage 1 of this log).
+
+## 2026-09-05 — Stage 5: permission recovery, cross-module correlations, dashboard laziness
+
+User asked to start "the next phase." Since every roadmap stage was already marked complete and
+nothing was queued as a defined next stage, asked which of the open, heterogeneous "left" items
+to tackle rather than guessing — user picked three: native permission-recovery UX, deeper
+cross-module insights, and a bundle/performance pass on Home's dashboard.
+
+- **Permission-recovery UX**: `engine/reminders/permissionStatus.ts`'s `evaluateReminderHealth`
+  is pure decision logic (6 unit tests) fed by three new thin wrappers in `nativeNotifications.ts`
+  around the `@capacitor/local-notifications` plugin's existing `checkPermissions`,
+  `checkExactNotificationSetting`, and `changeExactNotificationSetting` methods (confirmed these
+  exist and match the assumed shape by reading the installed plugin's own `.d.ts` before writing
+  any code against them). `hooks/useNativeReminderHealth.ts` re-checks on every
+  `visibilitychange` (not just on mount), since the only way to actually fix a denied permission
+  is a round trip through system Settings and back. `NativeReminderPermissionBanner` shows on
+  Home only when there's a real problem *and* the user has at least one active reminder.
+  - **Live-verified on a real emulator, and it caught a real bug.** Did a clean uninstall to get
+    a genuinely unpermissioned app, denied the notification-permission dialog when setting a
+    reminder (confirmed via `checkPermissions()` queried directly through
+    `window.Capacitor.Plugins` that a single denial reports `'prompt-with-rationale'`, not
+    `'denied'` — Android doesn't hard-block until a second denial or "don't ask again"), and
+    separately confirmed the exact-alarm permission was genuinely `'denied'` the same way. The
+    banner correctly showed the exact-alarm message for that state — but the underlying priority
+    logic was backwards: it checked `exactAlarmDenied` before `notificationDenied`, when
+    notification-denied is actually the more severe case (nothing displays at all) and
+    exact-alarm-denied alone is a lesser one (it still displays, just not necessarily on time).
+    Fixed the priority, rebuilt, and re-verified: clicking the banner's "Fix" button correctly
+    deep-linked to the system "Alarms & reminders" screen (screenshotted), granting it there and
+    returning to the app made the banner disappear on the next visibility-change re-check.
+  - The pre-existing browser-only `NotificationPermissionBanner` (for the in-app foreground poll)
+    is now gated to `!isNativePlatform()` — it was promoting a poll that no longer even runs on
+    native, so showing it there was actively misleading, not just redundant.
+- **Cross-module correlations** (`modules/insights/correlations.ts`): a phi coefficient (binary
+  Pearson correlation) between every pair of streak modules' daily goal-met series over a
+  trailing 30 days (longer than the weekly summary's 7-day window on purpose — correlation needs
+  more history to trust than a coaching headline does). Two noise guards: `minActiveDays` (a
+  module must have actually been met on enough days — otherwise a barely-used module could
+  spuriously "correlate" with another by chance) and `minStrength` (the correlation itself must
+  clear a threshold). Below either, `computeModuleCorrelations` returns `[]`, not a guess. 11 unit
+  tests cover the math (perfect positive/negative, zero-variance-returns-null since correlation
+  is undefined not zero there, a hand-verified partial-correlation contingency table) and both
+  filters. `CorrelationsCard` renders nothing when there's nothing to show — same "quiet unless
+  genuinely useful" choice already made for the companion's resting state — verified live that it
+  correctly stays silent on a fresh install. Surfacing an actual live correlation would need weeks
+  of varied backdated history the app's action functions don't support writing (same limitation
+  already hit and noted for the companion's `thriving` state in Stage 3); left to the unit tests.
+- **Dashboard data-fetch laziness** (`components/ui/LazyOnVisible.tsx`): Stage 3's code-splitting
+  only deferred each card's *code* — `React.lazy` doesn't defer a mounted component's hooks, so
+  all 8 secondary cards' live-query subscriptions still fired together the instant Home rendered.
+  `LazyOnVisible` wraps each one in an `IntersectionObserver` gate (falls back to mounting
+  immediately if unavailable) so both the chunk import and the live query wait until the card
+  scrolls near the viewport; a mount-once gate, not virtualization, so data doesn't reset on
+  scroll-away. Water (the hero card) stays eager. Verified live via Playwright: nothing renders
+  prematurely, and scrolling correctly brings in every lazy card's real content with zero console
+  errors.
+- **Final verification**: `npx tsc -b` clean, `npx vitest run` — 20 files, 120/120 tests passing.
+  Rebuilt the web bundle and Android APK twice (once for the initial pass, once after the
+  message-priority fix found during live testing); the permission-recovery flow was verified
+  end-to-end on the real emulator, not just compiled. Debug APK re-exported to
+  `~/Desktop/LifeOS-APK/LifeOS-debug.apk`.

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/Button'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { ReminderToggle } from '@/components/ui/ReminderToggle'
 import { deleteMedication } from '@/db/repositories/medicationRepo'
 import type { Medication } from '@/db/schema'
 import { isLowStock } from '@/engine/inventory/stock'
@@ -34,6 +35,7 @@ export function MedicationListItem({ medication, takenToday }: MedicationListIte
           {lowStock && (
             <span className="text-action">Low stock ({medication.currentStock} left)</span>
           )}
+          <ReminderToggle entityType="medication" entityId={medication.id} />
         </div>
       </div>
       <div className="flex items-center gap-2">

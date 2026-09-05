@@ -1,6 +1,7 @@
 import { settleStreak } from '@/db/repositories/streaksRepo'
 import type { ModuleKey } from '@/db/schema'
 import { startReminderScheduler } from '@/engine/reminders/reminderScheduler'
+import { generateDueRecurringBills } from '@/modules/expenses/actions'
 import { useEffect } from 'react'
 
 // Every ModuleKey that participates in the streak engine. Notes and Wishlist deliberately have
@@ -9,22 +10,24 @@ const MODULE_KEYS: ModuleKey[] = ['water', 'supplements', 'tasks', 'medication',
 
 /**
  * Runs on every app mount and whenever the tab becomes visible again: reconciles each module's
- * streak against an elapsed, uncovered gap (see streakEngine.settleToDate), and (re)starts the
- * in-app reminder poll. Call once near the root (see App.tsx).
+ * streak against an elapsed, uncovered gap (see streakEngine.settleToDate), auto-generates any
+ * due recurring bills, and (re)starts the in-app reminder poll. Call once near the root (see
+ * App.tsx).
  */
 export function useAppForegroundEffects(): void {
   useEffect(() => {
-    function settleAll() {
+    function runForegroundChecks() {
       for (const moduleKey of MODULE_KEYS) {
         void settleStreak(moduleKey)
       }
+      void generateDueRecurringBills()
     }
 
     function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') settleAll()
+      if (document.visibilityState === 'visible') runForegroundChecks()
     }
 
-    settleAll()
+    runForegroundChecks()
     document.addEventListener('visibilitychange', handleVisibilityChange)
     const stopReminders = startReminderScheduler()
 

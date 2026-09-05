@@ -1,4 +1,5 @@
 import { GlassCard } from '@/components/ui/GlassCard'
+import { ReminderToggle } from '@/components/ui/ReminderToggle'
 import { deleteTask } from '@/db/repositories/tasksRepo'
 import type { Task } from '@/db/schema'
 import clsx from 'clsx'
@@ -44,6 +45,7 @@ export function TaskListItem({ task }: { task: Task }) {
               <Repeat size={12} /> repeats
             </span>
           )}
+          <ReminderToggle entityType="task" entityId={task.id} />
         </div>
       </div>
       <button

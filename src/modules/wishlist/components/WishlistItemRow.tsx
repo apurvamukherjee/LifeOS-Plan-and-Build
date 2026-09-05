@@ -11,7 +11,7 @@ export function WishlistItemRow({ item }: { item: WishlistItem }) {
       <div className="flex flex-col gap-0.5">
         <span className="font-medium">{item.name}</span>
         <span className="text-xs text-(--color-text-secondary)">
-          {item.quantity} × ${item.price.toFixed(2)} = ${subtotal.toFixed(2)}
+          {item.quantity} × ₹{item.price.toFixed(2)} = ₹{subtotal.toFixed(2)}
           {item.category && ` · ${item.category}`}
           {item.store && ` · ${item.store}`}
         </span>

@@ -140,6 +140,9 @@ export interface Expense extends BaseRecord {
   category: string
   note: string
   occurredAt: string
+  /** Set when this expense was auto-generated from a RecurringBill, so generation logic can
+   * tell "already created this month" apart from a coincidentally similar manual entry. */
+  recurringBillId: string | null
 }
 
 export interface Budget extends BaseRecord {
@@ -194,6 +197,9 @@ export interface Workout extends BaseRecord {
   notes: string
   startedAt: string
   completedAt: string | null
+  /** Set when this workout was started from a WorkoutTemplate, so the active session can
+   * pre-populate quick-select exercises from it. */
+  templateId: string | null
 }
 
 export interface WorkoutSet extends BaseRecord {

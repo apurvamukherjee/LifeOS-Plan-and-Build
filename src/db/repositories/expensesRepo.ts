@@ -8,8 +8,10 @@ export async function listExpenses(): Promise<Expense[]> {
   return all.filter((expense) => !expense.deleted).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
 }
 
-export async function addExpenseRaw(fields: Omit<Expense, keyof BaseRecord>): Promise<Expense> {
-  return insertRecord<Expense>(db.expenses, fields)
+export async function addExpenseRaw(
+  fields: Omit<Expense, keyof BaseRecord | 'recurringBillId'> & { recurringBillId?: string | null },
+): Promise<Expense> {
+  return insertRecord<Expense>(db.expenses, { recurringBillId: null, ...fields })
 }
 
 export async function deleteExpense(id: string): Promise<void> {
