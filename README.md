@@ -23,10 +23,10 @@ LifeOS takes the opposite approach: **one home screen, one streak system, one de
 | 💧 **Water** | One-tap logging with a personal daily goal and a live progress ring |
 | 💊 **Supplements** | Dosing schedules, loading-phase tracking, and a live saturation percentage for things like creatine |
 | ✅ **Tasks** | Daily, weekly, and monthly recurring to-dos that actually reset themselves |
-| 💊 **Medication** | Gentle adherence tracking that never guilt-trips you for a missed dose |
+| 💊 **Medication** | Gentle adherence tracking with reminders that actually reach you — a real notification, even with the app closed |
 | 🍽️ **Food** | Fast calorie logging plus one-tap re-logging of your regular meals |
-| 🏋️ **Gym** | Full workout sessions — set-by-set logging, a rest timer, a plate calculator, and automatic personal-record detection |
-| 💵 **Expenses** | Dead-simple money in / money out tracking with monthly budgets by category |
+| 🏋️ **Gym** | Full workout sessions — set-by-set logging, a rest timer, a plate calculator, automatic personal-record detection, and one-tap starts from a saved routine |
+| 💵 **Expenses** | Dead-simple money in / money out tracking, monthly budgets by category, and recurring bills that log themselves the day they're due |
 | 🛍️ **Wishlist** | A running total of everything you want, scored by how much you actually need it |
 | 📝 **Notes** | Instant capture for whatever's in your head right now |
 
@@ -36,7 +36,7 @@ Streaks are everywhere in this app — but they're forgiving. Miss a day and a s
 
 There's also a small companion that reflects your week back at you — cheerful when you've been consistent, quietly resting when you haven't touched the app in a while, but never disappointed in you. It's not there to judge, it's there to notice.
 
-Every week, LifeOS also puts together a short, honest summary of how things went — your strongest area, and the one that could use a little more attention — instead of burying you in charts.
+Every week, LifeOS also puts together a short, honest summary of how things went — your strongest area, and the one that could use a little more attention — instead of burying you in charts. Give it enough time and it starts noticing real patterns across your habits too, like your best gym weeks usually being your best water weeks — quietly, and only once there's actually enough to say something true.
 
 ## A few of the details
 
@@ -49,6 +49,14 @@ Every week, LifeOS also puts together a short, honest summary of how things went
 <br />
 
 Hit a goal for the day and the app celebrates with you — small, quick, and never in the way. Log a heavier set than ever before in the gym module and it notices immediately. Add something to your wishlist and it keeps an honest running total so "I'll just get it" decisions come with a real number attached.
+
+## It follows through
+
+Set a reminder on a medication or a task and LifeOS actually delivers it — a real notification on your phone at the exact time you asked for, whether the app is open, backgrounded, or fully closed. Not a browser tab nagging you while it happens to be open — a real notification, the same way any other app on your phone would send one.
+
+<div align="center">
+<img src="docs/screenshots/reminder.png" alt="A real LifeOS notification in the Android notification shade" width="360" />
+</div>
 
 ## Works everywhere, even with no signal
 
@@ -64,6 +72,25 @@ LifeOS installs straight to your home screen like a native app and works complet
 ## Design
 
 Deep indigo, frosted glass surfaces, and a restrained color system where every accent color means something specific — blue for water, green for consistency, coral for action, lavender for reflection. Nothing is decorative; every visual choice is there to make the right information easier to read at a glance.
+
+## Built with
+
+| | Used for |
+|---|---|
+| **React 19 + TypeScript** | The UI itself — every screen, component, and interaction |
+| **Vite** | Dev server and production bundler |
+| **Dexie.js (IndexedDB)** | The on-device database every screen reads from — this is what makes the app local-first: no network round-trip for anything you see |
+| **Supabase (Postgres + Auth)** | Optional background cloud sync and cross-device login, once you connect your own project |
+| **Capacitor** | Wraps the same app as a real native Android app, not just a browser shortcut |
+| **@capacitor/local-notifications** | Schedules genuine OS-level notifications for reminders — the piece that makes them fire even with the app closed |
+| **Tailwind CSS v4** | The entire design system — colors, spacing, glass surfaces — as design tokens |
+| **Motion (Framer Motion)** | Every animation: streak celebrations, tap feedback, the companion's breathing motion |
+| **Lucide** | Every icon in the app |
+| **Satoshi** (self-hosted) | Typography, loaded from the app itself rather than an external font CDN, so it never depends on a network connection |
+| **React Router** | Navigation between pages |
+| **date-fns / date-fns-tz** | Timezone-safe date math behind the streak engine, so travel and DST changes never break a streak |
+| **vite-plugin-pwa (Workbox)** | The installable, offline-capable service worker |
+| **Vitest** | The test suite — 120+ unit tests covering the streak logic, sync engine, and pattern-detection math |
 
 ---
 
